@@ -1,4 +1,4 @@
-package ru.mail.track.tasks.messenger;
+package ru.mail.track.Ermolaeva.tasks.messenger;
 
 public class User {
     private String name;
