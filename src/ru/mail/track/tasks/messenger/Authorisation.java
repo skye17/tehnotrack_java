@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Simple class, records are not saved.
+ */
+
 public class Authorisation {
     protected Map<String, User> accounts;
     protected Scanner scanner;

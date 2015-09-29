@@ -8,12 +8,14 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Class reads and writes records from text file.
+ */
 public class FileAuthorisation extends Authorisation {
     private Path filePath;
 
     public FileAuthorisation(String filename) {
         this(filename, false);
-        //loadAccounts(filename);
     }
 
     public FileAuthorisation(String filename, boolean hidePassword) {
