@@ -1,5 +1,5 @@
 .idea/
-.classes/
-.out/
+classes/
+out/
 records.txt
 repo.iml
