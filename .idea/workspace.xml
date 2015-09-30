@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bd59c441-ef60-477c-8222-3028293820ba" name="Default" comment="Structure is a bit changed.">
-      <change type="DELETED" beforePath="E:\MyDocuments\mail\repo\.gitignore" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="repo.iws" />
     <ignored path=".idea/workspace.xml" />
