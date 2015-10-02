@@ -10,9 +10,10 @@ public class SimpleAuthorizationService implements AuthorizationService {
     protected boolean hidePassword = false;
 
     public SimpleAuthorizationService(Store userStore){
-        Utility.isNull(userStore);
-        this.userStore = userStore;
-        scanner = new Scanner(System.in);
+        if (userStore != null) {
+            this.userStore = userStore;
+            scanner = new Scanner(System.in);
+        }
     }
 
     public SimpleAuthorizationService(Store userStore, boolean hidePassword) {
@@ -55,19 +56,23 @@ public class SimpleAuthorizationService implements AuthorizationService {
 
     @Override
     public User login(String username) {
-        Utility.isNull(username);
-        String password = readPassword();
-        return userStore.getUser(username, password);
+        if (username != null) {
+            String password = readPassword();
+            return userStore.getUser(username, password);
+        }
+        return null;
     }
 
     @Override
     public User createUser(String username) {
-        Utility.isNull(username);
-        String password = readPassword();
-        User user = new User(username, password);
-        userStore.addUser(user);
-        System.out.println("You've successfully signed up.");
-        return user;
+        if (username != null) {
+            String password = readPassword();
+            User user = new User(username, password);
+            userStore.addUser(user);
+            System.out.println("You've successfully signed up.");
+            return user;
+        }
+        return null;
     }
 
     protected String readPassword() {

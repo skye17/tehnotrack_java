@@ -14,20 +14,19 @@ public class UserStore implements Store {
 
     @Override
     public boolean isUserExist(String name) {
-        Utility.isNull(name);
-        return accounts.containsKey(name);
+        return name != null && accounts.containsKey(name);
     }
 
     @Override
     public void addUser(User user) {
-        Utility.isNull(user);
-        accounts.put(user.getName(), user);
+        if (user !=  null) {
+            accounts.put(user.getName(), user);
+        }
     }
 
     @Override
     public User getUser(String username, String password) {
-        Utility.isNull(username, password);
-        if (checkUserPassword(username, password)) {
+        if (username != null && password != null && checkUserPassword(username, password)) {
             return accounts.get(username);
         }
         return null;

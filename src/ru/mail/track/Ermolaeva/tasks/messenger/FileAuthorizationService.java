@@ -21,16 +21,17 @@ public class FileAuthorizationService extends SimpleAuthorizationService {
     }
 
     private void loadAccounts(String filename) throws IOException {
-        Utility.isNull(filename);
-        filePath = Paths.get(filename);
-        if (Files.exists(filePath)) {
-            try (Scanner fileScanner = new Scanner(filePath)) {
-                while (fileScanner.hasNext("(.)*:(.)*")) {
-                    String keyValuePair = fileScanner.next("(.)*:(.)*");
-                    String[] contents = keyValuePair.split(":");
-                    if (contents.length == 2) {
-                        User user = new User(contents[0], contents[1]);
-                        userStore.addUser(user);
+        if (filename != null) {
+            filePath = Paths.get(filename);
+            if (Files.exists(filePath)) {
+                try (Scanner fileScanner = new Scanner(filePath)) {
+                    while (fileScanner.hasNext("(.)*:(.)*")) {
+                        String keyValuePair = fileScanner.next("(.)*:(.)*");
+                        String[] contents = keyValuePair.split(":");
+                        if (contents.length == 2) {
+                            User user = new User(contents[0], contents[1]);
+                            userStore.addUser(user);
+                        }
                     }
                 }
             }
