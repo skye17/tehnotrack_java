@@ -43,6 +43,6 @@ public class UserStore implements Store {
     }
 
     private boolean checkUserPassword(String username, String password) {
-        return accounts.get(username).getPassword().compareTo(password) == 0;
+        return accounts.get(username).getPassword().equals(password);
     }
 }
