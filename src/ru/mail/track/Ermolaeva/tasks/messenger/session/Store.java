@@ -1,4 +1,4 @@
-package ru.mail.track.Ermolaeva.tasks.messenger;
+package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
 
 import java.util.Collection;

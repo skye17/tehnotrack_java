@@ -1,4 +1,7 @@
-package ru.mail.track.Ermolaeva.tasks.messenger;
+package ru.mail.track.Ermolaeva.tasks.messenger.authorization;
+
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Store;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +29,7 @@ public class UserStore implements Store {
 
     @Override
     public User getUser(String username, String password) {
-        if (username != null && password != null && checkUserPassword(username, password)) {
+        if (username != null && password != null && isUserExist(username) && checkUserPassword(username, password)) {
             return accounts.get(username);
         }
         return null;

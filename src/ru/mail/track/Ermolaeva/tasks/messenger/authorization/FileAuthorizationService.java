@@ -1,5 +1,8 @@
-package ru.mail.track.Ermolaeva.tasks.messenger;
+package ru.mail.track.Ermolaeva.tasks.messenger.authorization;
 
+
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Store;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.User;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,10 +29,15 @@ public class FileAuthorizationService extends SimpleAuthorizationService {
             if (Files.exists(filePath)) {
                 try (Scanner fileScanner = new Scanner(filePath)) {
                     while (fileScanner.hasNext("(.)*:(.)*")) {
-                        String keyValuePair = fileScanner.next("(.)*:(.)*");
-                        String[] contents = keyValuePair.split(":");
-                        if (contents.length == 2) {
-                            User user = new User(contents[0], contents[1]);
+                        String tuple = fileScanner.next("(.)*:(.)*");
+                        String[] contents = tuple.split(":");
+                        if (contents.length == 2 || contents.length == 3) {
+                            User user;
+                            if (contents.length == 3) {
+                                user = new User(contents[0], contents[1], contents[2]);
+                            } else {
+                                user = new User(contents[0], contents[1]);
+                            }
                             userStore.addUser(user);
                         }
                     }
@@ -39,14 +47,19 @@ public class FileAuthorizationService extends SimpleAuthorizationService {
     }
 
     @Override
-    protected void saveAndClose() throws IOException {
+    public void saveAndClose() throws IOException {
         if (userStore.size() != 0 && Files.notExists(filePath)) {
             Files.createFile(filePath);
         }
 
         try (FileWriter fileWriter = new FileWriter(filePath.toFile())) {
             for (User user : userStore.getUsers()) {
-                fileWriter.write(user.getName() + ":" + user.getPassword() + "\n");
+                fileWriter.write(user.getName() + ":" + user.getPassword());
+                if (user.getNickname() != null) {
+                    fileWriter.write(":" + user.getNickname() + "\n");
+                } else {
+                    fileWriter.write("\n");
+                }
             }
         }
 
