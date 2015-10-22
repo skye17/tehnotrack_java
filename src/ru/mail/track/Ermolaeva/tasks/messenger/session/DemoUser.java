@@ -7,11 +7,13 @@ public class DemoUser extends User {
     }
 
     @Override
-    public void changePassword(String oldPassword, String newPassword) {
+    public boolean setPassword(String password) {
+        return false;
     }
 
     @Override
-    public void changeNickname(String nickname) {
+    public boolean setNickname(String nickname) {
+        return false;
     }
 
 }

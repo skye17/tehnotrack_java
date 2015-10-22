@@ -19,13 +19,6 @@ public class User {
         return nickname;
     }
 
-    public void changeNickname(String nickname) {
-        this.nickname = nickname;
-        if (nickname != null) {
-            System.out.println("Nickname is successfully changed");
-        }
-    }
-
     public String getName() {
         return  name;
     }
@@ -34,12 +27,15 @@ public class User {
         return password;
     }
 
-    public void changePassword(String oldPassword, String newPassword) {
-        if (oldPassword.equals(password) && newPassword != null) {
-            password = newPassword;
-            System.out.println("Password is successfully changed");
-        } else {
-            System.out.println("Wrong information. Password is not changed");
-        }
+    public boolean setPassword(String password) {
+        this.password = password;
+        return true;
     }
+
+
+    public boolean setNickname(String nickname) {
+        this.nickname = nickname;
+        return true;
+    }
+
 }

@@ -1,15 +1,14 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
-
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HelpCommand extends MessengerCommand {
 
-    Map<String, String> commands;
+    private Map<String, String> commands;
 
-    public HelpCommand(ArrayList<Command> commands) {
+    public HelpCommand(List<Command> commands) {
         name = "help";
         description = "/help - show information about all commands\n/help <command> - show information about <command>";
         this.commands = new HashMap<>();

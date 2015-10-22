@@ -12,12 +12,12 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class MessageService implements MessageStore {
-    final String USERNAME_PATTERN = "User:(.)*";
-    final String TIMESTAMP_PATTERN = "Timestamp:(.)*";
-    final String MESSAGE_START = "Message:";
-    final String MESSAGE_END = "Message;";
-    final String USER = "User:";
-    final String TIMESTAMP = "Timestamp:";
+    static final String USERNAME_PATTERN = "User:(.)*";
+    static final String TIMESTAMP_PATTERN = "Timestamp:(.)*";
+    static final String MESSAGE_START = "Message:";
+    static final String MESSAGE_END = "Message;";
+    static final String USER = "User:";
+    static final String TIMESTAMP = "Timestamp:";
     private Map<String, MessageStore> userMessageStore;
     private User currentUser;
     private Path historyPath;

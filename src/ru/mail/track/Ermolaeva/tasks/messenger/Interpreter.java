@@ -8,7 +8,11 @@ import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 public class Interpreter {
     public static final String PROMPT = "$ ";
@@ -22,7 +26,7 @@ public class Interpreter {
     private PrintStream out;
     private Session session;
 
-    public Interpreter(Session session, ArrayList<Command> commands,
+    public Interpreter(Session session, List<Command> commandsList,
                        final InputStream inStream,
                        final PrintStream outStream) {
         if (inStream == null || outStream == null) {
@@ -31,14 +35,14 @@ public class Interpreter {
         in = inStream;
         out = outStream;
         this.session = session;
-        this.commands = new HashMap<>();
-        for (Command command : commands) {
-            this.commands.put(command.getName(), command);
+        commands = new HashMap<>();
+        for (Command command : commandsList) {
+            commands.put(command.getName(), command);
         }
     }
 
-    public Interpreter(Session session, final ArrayList<Command> commands) {
-        this(session, commands, System.in, System.out);
+    public Interpreter(Session session, final List<Command> commandsList) {
+        this(session, commandsList, System.in, System.out);
     }
 
 
@@ -48,7 +52,7 @@ public class Interpreter {
         userMode();
     }
 
-    private void userMode() throws ExitException {
+    private void userMode() {
         try (Scanner scan = new Scanner(in)) {
             while (true) {
                 out.print(PROMPT);
@@ -77,7 +81,7 @@ public class Interpreter {
                     out.println(e.getMessage());
                 } catch (ExitException ex) {
                     out.println(ex.getMessage());
-                    throw ex;
+                    return;
                 }
             }
         }

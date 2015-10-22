@@ -3,10 +3,11 @@ package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class MessageStoreImpl implements MessageStore {
-    private ArrayList<Message> messages;
+    private List<Message> messages;
 
     public MessageStoreImpl() {
         messages = new ArrayList<>();
