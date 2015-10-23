@@ -15,9 +15,4 @@ public interface MessageStore {
 
     Collection<Message> getMessagesByPattern(String pattern, boolean caseFlag);
 
-    Collection<Message> getMessagesByPattern(String pattern);
-
-    Collection<Message> getMessagesByPattern(Pattern pattern, boolean caseFlag);
-
-    Collection<Message> getMessagesByPattern(Pattern pattern);
 }

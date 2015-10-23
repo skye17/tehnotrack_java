@@ -46,39 +46,20 @@ public class MessageStoreImpl implements MessageStore {
 
     @Override
     public Collection<Message> getMessagesByPattern(String regex, boolean caseFlag) {
-        if (caseFlag) {
-            return getMessagesByPattern(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
-        }
-        return getMessagesByPattern(Pattern.compile(regex));
-    }
-
-
-    @Override
-    public Collection<Message> getMessagesByPattern(String regex) {
-        return getMessagesByPattern(regex, false);
-    }
-
-    @Override
-    public Collection<Message> getMessagesByPattern(Pattern regexPattern, boolean caseFlag) {
         ArrayList<Message> result = new ArrayList<>();
         if (caseFlag) {
             for (Message message : messages) {
-                if (regexPattern.matcher(message.getMessage()).find(Pattern.CASE_INSENSITIVE)) {
+                if (Pattern.compile(regex).matcher(message.getMessage()).find(Pattern.CASE_INSENSITIVE)) {
                     result.add(message);
                 }
             }
         } else {
             for (Message message : messages) {
-                if (regexPattern.matcher(message.getMessage()).find()) {
+                if (Pattern.compile(regex).matcher(message.getMessage()).find()) {
                     result.add(message);
                 }
             }
         }
         return result;
-    }
-
-    @Override
-    public Collection<Message> getMessagesByPattern(Pattern regexPattern) {
-        return getMessagesByPattern(regexPattern, false);
     }
 }
