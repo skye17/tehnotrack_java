@@ -2,7 +2,6 @@ package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
 
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 public interface MessageStore {
     void addMessage(Message message);
