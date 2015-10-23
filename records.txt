@@ -1,0 +1,6 @@
+Petya:peter:Pierre
+Sasha:lucky:fortune
+Demo:demopass
+Katya:pepsi
+Nastya:password
+Jane:NewAir:Air
