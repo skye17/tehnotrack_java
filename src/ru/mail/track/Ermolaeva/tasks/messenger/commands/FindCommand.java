@@ -42,14 +42,14 @@ public class FindCommand extends MessengerCommand {
                 result = session.getMessageService().getMessagesByKeyword(keyword);
             } else {
                 String regex = arguments[0].substring(1, arguments[0].length() - 1);
-                result = session.getMessageService().getMessagesByPattern(regex);
+                result = session.getMessageService().getMessagesByPattern(regex, false);
             }
         } else {
             String regex = arguments[0].substring(1, arguments[0].length() - 1);
             if (arguments[1].equals(CASE_FLAG)) {
                 result = session.getMessageService().getMessagesByPattern(regex, true);
             } else {
-                result = session.getMessageService().getMessagesByPattern(regex);
+                result = session.getMessageService().getMessagesByPattern(regex, false);
             }
         }
 

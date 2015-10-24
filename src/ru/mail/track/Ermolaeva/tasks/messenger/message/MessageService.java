@@ -165,30 +165,4 @@ public class MessageService implements MessageStore {
         return null;
     }
 
-    @Override
-    public Collection<Message> getMessagesByPattern(String pattern) {
-        MessageStore messageStore = userMessageStore.get(currentUser.getName());
-        if (messageStore != null) {
-            return messageStore.getMessagesByPattern(pattern);
-        }
-        return null;
-    }
-
-    @Override
-    public Collection<Message> getMessagesByPattern(Pattern pattern, boolean caseFlag) {
-        MessageStore messageStore = userMessageStore.get(currentUser.getName());
-        if (messageStore != null) {
-            return messageStore.getMessagesByPattern(pattern, caseFlag);
-        }
-        return null;
-    }
-
-    @Override
-    public Collection<Message> getMessagesByPattern(Pattern pattern) {
-        MessageStore messageStore = userMessageStore.get(currentUser.getName());
-        if (messageStore != null) {
-            return messageStore.getMessagesByPattern(pattern);
-        }
-        return null;
-    }
 }
