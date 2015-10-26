@@ -14,4 +14,6 @@ public interface MessageStore {
 
     Collection<Message> getMessagesByPattern(String pattern, boolean caseFlag);
 
+    int size();
+
 }

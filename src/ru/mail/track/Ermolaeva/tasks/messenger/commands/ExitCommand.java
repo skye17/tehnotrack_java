@@ -19,7 +19,7 @@ public class ExitCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argsString) {
+    public CommandResult execute(String argsString) {
         try {
             session.close();
             if (authorizationService != null) {

@@ -62,4 +62,9 @@ public class MessageStoreImpl implements MessageStore {
         }
         return result;
     }
+
+    @Override
+    public int size() {
+        return messages.size();
+    }
 }

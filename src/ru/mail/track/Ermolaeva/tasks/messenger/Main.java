@@ -1,5 +1,5 @@
 package ru.mail.track.Ermolaeva.tasks.messenger;
-
+/*
 
 import ru.mail.track.Ermolaeva.tasks.messenger.authorization.AuthorizationService;
 import ru.mail.track.Ermolaeva.tasks.messenger.authorization.FileAuthorizationService;
@@ -40,3 +40,4 @@ public class Main {
 
     }
 }
+*/

@@ -1,5 +1,7 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,22 +22,34 @@ public class HelpCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argsString) {
+    public CommandResult execute(String argsString) {
         String[] arguments = preprocessArgumentsString(argsString);
+        final ArrayList<String> result;
         if (arguments.length == 0) {
+            result = new ArrayList<>();
             for (String commandName : commands.keySet()) {
-                System.out.println(commandName + ":\n" + commands.get(commandName));
+                result.add(commandName + ":\n" + commands.get(commandName));
             }
+
         } else {
+            result = new ArrayList<>();
             if (arguments.length == 1) {
                 if (commands.containsKey(arguments[0])) {
-                    System.out.println(arguments[0] + ":\n" + commands.get(arguments[0]));
+                    result.add(arguments[0] + ":\n" + commands.get(arguments[0]));
                 } else {
-                    System.out.println("Command not found");
+                    result.add("Command not found");
                 }
             } else {
                 illegalArgument();
             }
         }
+
+        return out -> result.stream().filter(string -> string != null).forEach(s -> {
+            try {
+                out.write(s.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

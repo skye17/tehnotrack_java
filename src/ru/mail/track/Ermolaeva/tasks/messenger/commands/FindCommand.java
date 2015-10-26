@@ -24,16 +24,13 @@ public class FindCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argString) {
+    public CommandResult execute(String argString) {
         Collection<Message> result;
         String[] arguments = preprocessArgumentsString(argString);
-        session.setupMessageService();
-        if (!session.getMessageService().isLoaded()) {
-            try {
-                session.getMessageService().loadHistory();
-            } catch (IOException e) {
-                throw new ExitException("Can't read users' history: " + e.getMessage(), 1);
-            }
+        try {
+            session.prepareMessageService();
+        } catch (IOException e) {
+            throw new ExitException("Can't read users' history: " + e.getMessage(), 1);
         }
 
         if (arguments.length == 1) {
@@ -53,12 +50,15 @@ public class FindCommand extends MessengerCommand {
             }
         }
 
-
         if (result != null) {
-            for (Message message : result) {
-                System.out.println(message.getTimestamp());
-                System.out.println(message.getMessage());
-            }
+            return out -> {
+                for (Message message : result) {
+                    out.write(message.getTimestamp().getBytes());
+                    out.write(message.getMessage().getBytes());
+                }
+            };
+        } else {
+            return out -> out.write("No messages".getBytes());
         }
     }
 

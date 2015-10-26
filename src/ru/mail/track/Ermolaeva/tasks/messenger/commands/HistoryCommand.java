@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 public class HistoryCommand extends MessengerCommand {
+    Collection<Message> result;
 
     public HistoryCommand(Session session) {
         super(session);
@@ -16,18 +17,15 @@ public class HistoryCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argString) {
-        Collection<Message> result = null;
+    public CommandResult execute(String argString) {
         String[] arguments = preprocessArgumentsString(argString);
         if (arguments.length == 0 || arguments.length == 1) {
-            session.setupMessageService();
-            if (!session.getMessageService().isLoaded()) {
-                try {
-                    session.getMessageService().loadHistory();
-                } catch (IOException e) {
-                    throw new ExitException("Can't read users' history: " + e.getMessage(), 1);
-                }
+            try {
+                session.prepareMessageService();
+            } catch (IOException e) {
+                throw new ExitException("Can't read users' history: " + e.getMessage(), 1);
             }
+
             if (arguments.length == 0) {
                 result = session.getMessageService().getMessageHistory();
             } else {
@@ -38,17 +36,19 @@ public class HistoryCommand extends MessengerCommand {
                     illegalArgument("Second argument should be number.");
                 }
             }
-
         } else {
             illegalArgument();
         }
 
-
-        if (result != null) {
-            for (Message message : result) {
-                System.out.println(message.getTimestamp());
-                System.out.println(message.getMessage());
-            }
+        if (result == null || result.size() == 0) {
+            return out -> out.write("No messages".getBytes());
+        } else {
+            return out -> {
+                for (Message message : result) {
+                    out.write(message.getTimestamp().getBytes());
+                    out.write(message.getMessage().getBytes());
+                }
+            };
         }
     }
 

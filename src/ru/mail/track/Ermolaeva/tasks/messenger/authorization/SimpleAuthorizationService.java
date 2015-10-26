@@ -1,37 +1,72 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.authorization;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.StreamException;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Store;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.User;
 
 import java.io.Console;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class SimpleAuthorizationService implements AuthorizationService {
     protected Scanner scanner;
     protected Store userStore;
+    protected Map<User, Boolean> isLogined;
     protected boolean hidePassword;
+    protected InputStream in;
+    protected PrintStream out;
 
-    public SimpleAuthorizationService(Store userStore){
-        if (userStore != null) {
-            this.userStore = userStore;
-            scanner = new Scanner(System.in);
-        }
+    public SimpleAuthorizationService(Store userStore) {
+        this(userStore, System.in, System.out, false);
     }
 
     public SimpleAuthorizationService(Store userStore, boolean hidePassword) {
-        this(userStore);
-        this.hidePassword = hidePassword;
+        this(userStore, System.in, System.out, hidePassword);
+    }
+
+    public SimpleAuthorizationService(Store userStore, InputStream in, PrintStream out, boolean hidePassword) {
+        if (userStore != null) {
+            this.userStore = userStore;
+            this.hidePassword = hidePassword;
+            this.in = in;
+            this.out = out;
+            isLogined = new HashMap<>();
+            scanner = new Scanner(in);
+        }
+    }
+
+    @Override
+    public void setOutputStream(PrintStream out) {
+        this.out = out;
+    }
+
+    @Override
+    public void setInputStream(InputStream in) {
+        this.in = in;
     }
 
     @Override
     public User login(String username, String password) {
         if (username != null) {
             User result = userStore.getUser(username, password);
-            if (result == null) {
-                System.out.println("Information is incorrect. Login is unsuccessful");
-            } else {
-                System.out.println("You've successfully signed in");
+            try {
+                if (result == null) {
+                    out.write("Information is incorrect. Login is unsuccessful".getBytes());
+                } else {
+                    if (!isLogin(result)) {
+                        out.write("You've successfully signed in".getBytes());
+                        isLogined.put(result, true);
+                    } else {
+                        out.write("Somebody already signed in your account!".getBytes());
+                        return null;
+                    }
+                }
+            } catch (IOException io) {
+                throw new StreamException(io.getMessage());
             }
             return result;
         }
@@ -40,40 +75,55 @@ public class SimpleAuthorizationService implements AuthorizationService {
 
     @Override
     public User createUser() {
-        System.out.print("Username: ");
-        scanner = new Scanner(System.in);
-        String username = scanner.next();
-        if (username != null) {
-            if (userStore.isUserExist(username)) {
-                System.out.println("This username is already occupied.");
-            } else {
-                String password = readPassword();
-                User user = new User(username, password);
-                userStore.addUser(user);
-                System.out.println("You've successfully signed up.");
-                return user;
-
+        try {
+            out.write("Username: ".getBytes());
+            scanner = new Scanner(in);
+            String username = scanner.next();
+            if (username != null) {
+                if (userStore.isUserExist(username)) {
+                    out.write("This username is already occupied.".getBytes());
+                } else {
+                    String password = readPassword();
+                    User user = new User(username, password);
+                    userStore.addUser(user);
+                    out.write("You've successfully signed up.".getBytes());
+                    return user;
+                }
             }
+        } catch (IOException io) {
+            throw new StreamException(io.getMessage());
         }
-
         return null;
     }
+
+
+    @Override
+    public boolean isLogin(User user) {
+        if (isLogined.containsKey(user)) {
+            return isLogined.get(user);
+        }
+        return false;
+    }
+
 
     protected String readPassword() {
         String password = null;
         if (hidePassword) {
             scanner.close();
             Console console = System.console();
-            System.out.println(console);
             if (console != null) {
                 char[] passwordChar = console.readPassword("Password: ");
                 if (passwordChar != null) {
                     password = new String(passwordChar);
                 }
             }
-            scanner = new Scanner(System.in);
+            scanner = new Scanner(in);
         } else {
-            System.out.print("Password: ");
+            try {
+                out.write("Password: ".getBytes());
+            } catch (IOException e) {
+                throw new StreamException(e.getMessage());
+            }
             if (scanner.hasNext()) {
                 password = scanner.next();
             }

@@ -22,7 +22,7 @@ public abstract class MessengerCommand implements Command {
     }
 
     @Override
-    public abstract void execute(String argString);
+    public abstract CommandResult execute(String argString);
 
     @Override
     public String getDescription() {
@@ -44,4 +44,5 @@ public abstract class MessengerCommand implements Command {
             return new String[]{};
         }
     }
+
 }

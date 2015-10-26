@@ -165,4 +165,11 @@ public class MessageService implements MessageStore {
         return null;
     }
 
+
+    // bad part
+    @Override
+    public int size() {
+        return 0;
+    }
+
 }

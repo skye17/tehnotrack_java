@@ -15,7 +15,7 @@ public class LoginCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argsString) {
+    public CommandResult execute(String argsString) {
         String[] arguments = preprocessArgumentsString(argsString);
         if (arguments.length == 0) {
             User user = authorizationService.createUser();
@@ -32,6 +32,7 @@ public class LoginCommand extends MessengerCommand {
                 illegalArgument();
             }
         }
+        return null;
     }
 
 }

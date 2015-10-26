@@ -1,5 +1,5 @@
 package ru.mail.track.Ermolaeva.tasks.messenger;
-
+/*
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.Command;
 import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.ExitException;
 import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.IllegalCommandException;
@@ -110,3 +110,4 @@ public class Interpreter {
         }
     }
 }
+*/

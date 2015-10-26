@@ -4,7 +4,7 @@ public interface Command {
 
     String getName();
 
-    void execute(String argString);
+    CommandResult execute(String argString);
 
     String getDescription();
 

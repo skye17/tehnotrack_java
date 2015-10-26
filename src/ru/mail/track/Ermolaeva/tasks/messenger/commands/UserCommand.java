@@ -5,6 +5,10 @@ import ru.mail.track.Ermolaeva.tasks.messenger.session.User;
 
 public class UserCommand extends MessengerCommand {
     static final String DEMO_USER = "DemoUser";
+    static final String NICKNAME_CHANGED = "Nickname is successfully changed";
+    static final String PASSWORD_CHANGED = "Password is successfully changed";
+    static final String WRONG_INFO = "Wrong information. Password is not changed";
+
 
     public UserCommand(Session session) {
         super(session);
@@ -14,14 +18,15 @@ public class UserCommand extends MessengerCommand {
     }
 
     @Override
-    public void execute(String argsString) {
+    public CommandResult execute(String argsString) {
         String[] arguments = preprocessArgumentsString(argsString);
+
         if (arguments.length == 1) {
             String nickname = arguments[0];
             boolean realUser = session.getCurrentUser().setNickname(nickname);
             if (nickname != null) {
                 if (realUser) {
-                    System.out.println("Nickname is successfully changed");
+                    return out -> out.println(NICKNAME_CHANGED);
                 }
             }
         } else {
@@ -32,16 +37,17 @@ public class UserCommand extends MessengerCommand {
                 if (oldPassword.equals(user.getPassword()) && newPassword != null) {
                     boolean realUser = user.setPassword(newPassword);
                     if (realUser) {
-                        System.out.println("Password is successfully changed");
+                        return out -> out.println(PASSWORD_CHANGED);
                     }
                 } else {
                     if (!user.getName().equals(DEMO_USER)) {
-                        System.out.println("Wrong information. Password is not changed");
+                        return out -> out.println(WRONG_INFO);
                     }
                 }
             } else {
                 illegalArgument();
             }
         }
+        return null;
     }
 }

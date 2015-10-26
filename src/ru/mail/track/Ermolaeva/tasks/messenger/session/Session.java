@@ -1,36 +1,39 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
-import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageService;
+import ru.mail.track.Ermolaeva.tasks.messenger.message.UserMessageService;
 
 import java.io.IOException;
 
 
 public class Session {
     private User currentUser;
-    private MessageService messageService;
+    private UserMessageService userMessageService;
 
     public User getCurrentUser() {
         return currentUser;
     }
 
-    public void setCurrentUser(User currentUser) {
-        this.currentUser = currentUser;
+    public void setCurrentUser(User user) {
+        currentUser = user;
     }
 
-    public MessageService getMessageService() {
-        return messageService;
+    public UserMessageService getMessageService() {
+        return userMessageService;
     }
 
-    public void setMessageService(MessageService messageService) throws IOException {
-        this.messageService = messageService;
-    }
-
-    public void setupMessageService() {
-        messageService.setCurrentUser(currentUser);
+    public void setMessageService(UserMessageService messageService) {
+        this.userMessageService = messageService;
     }
 
     public void close() throws IOException {
-        messageService.close();
+        userMessageService.close();
+    }
+
+    public void prepareMessageService() throws IOException {
+        userMessageService.setCurrentUser(currentUser);
+        if (!userMessageService.isLoaded(currentUser)) {
+            userMessageService.loadHistory(currentUser.getName());
+        }
     }
 
 }
