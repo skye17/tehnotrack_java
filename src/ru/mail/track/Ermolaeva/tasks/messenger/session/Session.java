@@ -1,13 +1,13 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
-import ru.mail.track.Ermolaeva.tasks.messenger.message.UserMessageService;
+import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageService;
 
 import java.io.IOException;
 
 
 public class Session {
     private User currentUser;
-    private UserMessageService userMessageService;
+    private MessageService messageService;
 
     public User getCurrentUser() {
         return currentUser;
@@ -17,22 +17,22 @@ public class Session {
         currentUser = user;
     }
 
-    public UserMessageService getMessageService() {
-        return userMessageService;
+    public MessageService getMessageService() {
+        return messageService;
     }
 
-    public void setMessageService(UserMessageService messageService) {
-        this.userMessageService = messageService;
+    public void setMessageService(MessageService messageService) {
+        this.messageService = messageService;
     }
 
     public void close() throws IOException {
-        userMessageService.close();
+        messageService.close();
     }
 
     public void prepareMessageService() throws IOException {
-        userMessageService.setCurrentUser(currentUser);
-        if (!userMessageService.isLoaded(currentUser)) {
-            userMessageService.loadHistory(currentUser.getName());
+        messageService.setCurrentUser(currentUser);
+        if (!messageService.isLoaded(currentUser)) {
+            messageService.loadHistory(currentUser.getName());
         }
     }
 

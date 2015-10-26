@@ -1,8 +1,10 @@
 package ru.mail.track.Ermolaeva.tasks.messenger;
-/*
+
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.Command;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandResult;
 import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.ExitException;
 import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.IllegalCommandException;
+import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.StreamException;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
 import java.io.IOException;
@@ -11,19 +13,18 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+
 
 public class Interpreter {
-    public static final String PROMPT = "$ ";
-
     public static final String COMMAND_NOT_FOUND_MSG = "Command not found: ";
     public static final String EXIT_COMMAND = "/exit";
+    public static final String STREAM_EXCEPTION_MSG = "Can't write to given outstream";
 
     private final Map<String, Command> commands;
 
     private InputStream in;
     private PrintStream out;
+
     private Session session;
 
     public Interpreter(Session session, List<Command> commandsList,
@@ -45,42 +46,51 @@ public class Interpreter {
         this(session, commandsList, System.in, System.out);
     }
 
-
     public final void run() {
-        out.println("Welcome to the messenger! Type /help to see all available commands");
-        out.println("To start working you need to login. Type /help login to get more information");
-        userMode();
+        try {
+            userMode();
+        } catch (IOException io) {
+            throw new ExitException(io.getMessage(), 1);
+        }
     }
 
-    private void userMode() {
-        try (Scanner scan = new Scanner(in)) {
+    void send(String msg) throws IOException {
+        out.write(msg.getBytes());
+    }
+
+    void onMessage(String msg) {
+        System.out.println("Client:" + msg);
+    }
+
+    private void userMode() throws IOException {
+        try (PrintStream printStream =
+                     new PrintStream(out, true)) {
+            printStream.write("Welcome to the messenger!".getBytes());
+            byte[] buf = new byte[512 * 1024];
             while (true) {
-                out.print(PROMPT);
+                int readBytes = in.read(buf);
                 String line = null;
-                try {
-                    line = scan.nextLine();
-                } catch (NoSuchElementException e) {
-                    commands.get(EXIT_COMMAND).execute(null);
+                if (readBytes >= 0) {
+                    line = new String(buf, 0, readBytes);
+                    onMessage(line);
                 }
                 try {
                     if (line != null && line.startsWith("/")) {
                         commandHandler(line.substring(1));
                     } else {
-                        session.setupMessageService();
                         try {
-                            if (!session.getMessageService().isLoaded()) {
-                                session.getMessageService().loadHistory();
-                            }
+                            session.prepareMessageService();
                             session.getMessageService().addMessage(line);
+                            send("OK");
                         } catch (IOException io) {
-                            out.println("Can't read users' history:" + io.getMessage());
+                            send("Can't read users' history:" + io.getMessage());
                             commands.get(EXIT_COMMAND).execute(null);
                         }
                     }
                 } catch (IllegalCommandException e) {
-                    out.println(e.getMessage());
+                    printStream.write(e.getMessage().getBytes());
                 } catch (ExitException ex) {
-                    out.println(ex.getMessage());
+                    printStream.write(ex.getMessage().getBytes());
                     return;
                 }
             }
@@ -103,11 +113,15 @@ public class Interpreter {
             throw new IllegalCommandException(COMMAND_NOT_FOUND_MSG + commandName);
         } else {
             try {
-                command.execute(arguments);
+                CommandResult result = command.execute(arguments);
+                if (result != null) {
+                    result.show(out);
+                }
             } catch (IllegalArgumentException a) {
                 out.println(a.getMessage());
+            } catch (IOException io) {
+                throw new StreamException(STREAM_EXCEPTION_MSG + io.getMessage());
             }
         }
     }
 }
-*/

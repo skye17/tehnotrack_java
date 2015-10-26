@@ -18,18 +18,24 @@ public class MessageService implements MessageStore {
     static final String MESSAGE_END = "Message;";
     static final String USER = "User:";
     static final String TIMESTAMP = "Timestamp:";
+    static final String DELIMITER = "_";
+    static final String FILE_EXTENSION = ".txt";
+
     private Map<String, MessageStore> userMessageStore;
+    private Map<String, Boolean> isLoaded;
     private User currentUser;
-    private Path historyPath;
-    private boolean isLoaded;
+    private String historyFile;
 
     public MessageService(String filename, Store userStore) throws IOException {
         if (filename != null) {
-            historyPath = Paths.get(filename);
+            historyFile = filename;
         }
-        this.userMessageStore = new HashMap<>();
+        userMessageStore = new HashMap<>();
+        isLoaded = new HashMap<>();
+
         for (User user : userStore.getUsers()) {
             userMessageStore.put(user.getName(), new MessageStoreImpl());
+            isLoaded.put(user.getName(), false);
         }
     }
 
@@ -37,15 +43,16 @@ public class MessageService implements MessageStore {
         this.currentUser = currentUser;
     }
 
-    public void loadHistory() throws IOException {
-        if (historyPath != null) {
+    public void loadHistory(String userName) throws IOException {
+        if (historyFile != null) {
+            Path historyPath = Paths.get(historyFile + DELIMITER + userName + FILE_EXTENSION);
             if (Files.exists(historyPath)) {
                 try (Scanner fileScanner = new Scanner(historyPath)) {
                     String username = null;
                     String timestamp;
                     String message;
                     String userString = fileScanner.findInLine(USERNAME_PATTERN);
-                    while (userString != null) {
+                    if (userString != null) {
                         String[] contents = userString.split(":");
                         if (contents.length == 2) {
                             username = contents[1];
@@ -76,38 +83,42 @@ public class MessageService implements MessageStore {
                                 }
                             }
                         }
-
-                        userString = fileScanner.findInLine(USERNAME_PATTERN);
                     }
                 }
             }
         }
-        isLoaded = true;
+        isLoaded.put(userName, true);
     }
 
-    public boolean isLoaded() {
-        return isLoaded;
+    public boolean isLoaded(User user) {
+        if (isLoaded.containsKey(user.getName())) {
+            return isLoaded.get(user.getName());
+        }
+        return false;
     }
 
     public void close() throws IOException {
-        writeHistory();
+        for (String username : isLoaded.keySet()) {
+            if (userMessageStore.get(username).size() != 0) {
+                writeHistory(username);
+            }
+        }
     }
 
-    private void writeHistory() throws IOException {
-        if (userMessageStore.size() != 0 && Files.notExists(historyPath)) {
+    private void writeHistory(String username) throws IOException {
+        Path historyPath = Paths.get(historyFile + DELIMITER + username + FILE_EXTENSION);
+        if (Files.notExists(historyPath)) {
             Files.createFile(historyPath);
         }
 
         try (FileWriter fileWriter = new FileWriter(historyPath.toFile())) {
-            for (String username : userMessageStore.keySet()) {
-                Collection<Message> messages = userMessageStore.get(username).getMessageHistory();
-                if (messages.size() != 0) {
-                    fileWriter.write(USER + username + "\n");
-                    for (Message message : messages) {
-                        fileWriter.write(TIMESTAMP + message.getTimestamp() + "\n");
-                        fileWriter.write(MESSAGE_START + "\n" + message.getMessage() + "\n"
-                                + MESSAGE_END + "\n");
-                    }
+            Collection<Message> messages = userMessageStore.get(username).getMessageHistory();
+            if (messages.size() != 0) {
+                fileWriter.write(USER + username + "\n");
+                for (Message message : messages) {
+                    fileWriter.write(TIMESTAMP + message.getTimestamp() + "\n");
+                    fileWriter.write(MESSAGE_START + "\n" + message.getMessage() + "\n"
+                            + MESSAGE_END + "\n");
                 }
             }
         }
@@ -166,10 +177,9 @@ public class MessageService implements MessageStore {
     }
 
 
-    // bad part
+
     @Override
     public int size() {
-        return 0;
+        return userMessageStore.get(currentUser.getName()).size();
     }
-
 }
