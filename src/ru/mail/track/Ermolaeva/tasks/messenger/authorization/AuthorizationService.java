@@ -3,8 +3,6 @@ package ru.mail.track.Ermolaeva.tasks.messenger.authorization;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.User;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 
 public interface AuthorizationService {
     User login(String username, String password);
@@ -15,8 +13,8 @@ public interface AuthorizationService {
 
     void saveAndClose() throws IOException;
 
-    void setOutputStream(PrintStream out);
+    //void setOutputStream(PrintStream out);
 
 
-    void setInputStream(InputStream in);
+    //void setInputStream(InputStream in);
 }

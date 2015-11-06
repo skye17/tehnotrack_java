@@ -1,55 +1,35 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
-import java.io.IOException;
+
+import ru.mail.track.Ermolaeva.tasks.messenger.command_message.HelpMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HelpCommand extends MessengerCommand {
+public class HelpCommand extends MessengerCommand<HelpMessage> {
+    private Map<CommandType, Command> commands;
 
-    private Map<String, String> commands;
-
-    public HelpCommand(List<Command> commands) {
-        name = "help";
-        description = "/help - show information about all commands\n/help <command> - show information about <command>";
-        this.commands = new HashMap<>();
-        this.commands.put(name, description);
-        for (Command command : commands) {
-            this.commands.put(command.getName(), command.getDescription());
-        }
-
+    public HelpCommand(Map<CommandType, Command> commands) {
+        commandType = CommandType.HELP;
+        description = "/help <command>- show information about <command>/all commands";
+        needLogin = false;
+        this.commands = commands;
+        commands.put(commandType, this);
     }
 
     @Override
-    public CommandResult execute(String argsString) {
-        String[] arguments = preprocessArgumentsString(argsString);
-        final ArrayList<String> result;
-        if (arguments.length == 0) {
-            result = new ArrayList<>();
-            for (String commandName : commands.keySet()) {
-                result.add(commandName + ":\n" + commands.get(commandName));
-            }
-
+    protected Result executeCommand(Session session, HelpMessage commandMessage) {
+        CommandType queryCommand = commandMessage.getCommand();
+        List<String> result = new ArrayList<>();
+        if (queryCommand != null) {
+            result.add(commands.get(queryCommand).getName() + ":" + commands.get(queryCommand).getDescription() + "\n");
         } else {
-            result = new ArrayList<>();
-            if (arguments.length == 1) {
-                if (commands.containsKey(arguments[0])) {
-                    result.add(arguments[0] + ":\n" + commands.get(arguments[0]));
-                } else {
-                    result.add("Command not found");
-                }
-            } else {
-                illegalArgument();
+            for (Command command : commands.values()) {
+                result.add(command.getName() + ":" + command.getDescription() + "\n");
             }
         }
-
-        return out -> result.stream().filter(string -> string != null).forEach(s -> {
-            try {
-                out.write(s.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        return new CommandResult(result);
     }
 }

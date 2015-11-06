@@ -1,10 +1,11 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.net.CommandMessage;
+
 public interface Command {
+    Result execute(Object state, CommandMessage message);
 
-    String getName();
-
-    CommandResult execute(String argString);
+    CommandType getName();
 
     String getDescription();
 

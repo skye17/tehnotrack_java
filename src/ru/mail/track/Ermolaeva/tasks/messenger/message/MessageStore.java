@@ -1,19 +1,49 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
+import java.util.List;
 
-import java.util.Collection;
-
+/**
+ * Хранилище информации о сообщениях
+ */
 public interface MessageStore {
-    void addMessage(Message message);
 
-    Collection<Message> getMessageHistory();
+    /**
+     * получаем список ид пользователей заданного чата
+     */
+    List<Long> getChatsByUserId(Long userId);
 
-    Collection<Message> getMessageHistory(int messagesNumber);
+    /**
+     * получить информацию о чате
+     */
+    Chat getChatById(Long chatId);
 
-    Collection<Message> getMessagesByKeyword(String keyword);
+    /**
+     * Список сообщений из чата
+     */
+    List<Long> getMessagesFromChat(Long chatId);
 
-    Collection<Message> getMessagesByPattern(String pattern, boolean caseFlag);
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern);
 
-    int size();
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern, boolean caseFlag);
+
+    /**
+     * Получить информацию о сообщении
+     */
+    ChatMessage getMessageById(Long messageId);
+
+    /**
+     * Добавить сообщение в чат
+     */
+    void addMessage(Long messageId, Long chatId);
+
+    /**
+     * Добавить пользователя к чату
+     */
+    void addUserToChat(Long userId, Long chatId);
+
+    void addMessage(ChatMessage message);
+
+    void addChat(Chat chat);
+
 
 }

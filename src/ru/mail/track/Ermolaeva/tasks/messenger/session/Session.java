@@ -1,13 +1,20 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
-import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageService;
 
-import java.io.IOException;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.ConnectionHandler;
 
 
 public class Session {
+    private Long id;
     private User currentUser;
-    private MessageService messageService;
+    private ConnectionHandler connectionHandler;
+
+    public Session(Long id) {
+        this.id = id;
+    }
+
+    public Session() {
+    }
 
     public User getCurrentUser() {
         return currentUser;
@@ -17,23 +24,24 @@ public class Session {
         currentUser = user;
     }
 
-    public MessageService getMessageService() {
-        return messageService;
+
+    public ConnectionHandler getConnectionHandler() {
+        return connectionHandler;
     }
 
-    public void setMessageService(MessageService messageService) {
-        this.messageService = messageService;
+    public void setConnectionHandler(ConnectionHandler connectionHandler) {
+        this.connectionHandler = connectionHandler;
     }
 
-    public void close() throws IOException {
-        messageService.close();
+    public Long getId() {
+        return id;
     }
 
-    public void prepareMessageService() throws IOException {
-        messageService.setCurrentUser(currentUser);
-        if (!messageService.isLoaded(currentUser)) {
-            messageService.loadHistory(currentUser.getName());
-        }
+    public void setId(Long id) {
+        this.id = id;
     }
 
+    public Long getCurrentUserId() {
+        return currentUser.getId();
+    }
 }

@@ -1,48 +1,54 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.net.CommandMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
-public abstract class MessengerCommand implements Command {
-    public static final String PARAM_DELIMITER = "\\s+";
-    protected String name;
-    protected String description;
-    protected Session session;
 
-    public MessengerCommand(Session session) {
-        this.session = session;
-    }
+public abstract class MessengerCommand<T extends CommandMessage> implements Command {
+    protected CommandType commandType;
+    protected String description;
+    protected boolean needLogin = true;
 
     public MessengerCommand() {
     }
 
-
     @Override
-    public String getName() {
-        return name;
+    public Result execute(Object state, CommandMessage message) {
+        if (state != null && state instanceof Session) {
+            Session session = (Session) state;
+            if (needLogin && !checkIsLogin(session)) {
+                return new CommandResult("You need to login first", true);
+            }
+            return executeCommand(session, (T) message);
+        }
+        return new CommandResult("Illegal command message", true);
     }
 
+
+    protected abstract Result executeCommand(Session session, T commandMessage);
+
+
     @Override
-    public abstract CommandResult execute(String argString);
+    public CommandType getName() {
+        return commandType;
+    }
+
+    public void setCommandType(CommandType commandType) {
+        this.commandType = commandType;
+    }
 
     @Override
     public String getDescription() {
         return description;
     }
 
-    protected void illegalArgument() {
-        illegalArgument("Wrong number of arguments.");
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    protected void illegalArgument(String problemDescription) {
-        throw new IllegalArgumentException("Wrong command usage." + problemDescription + "\nSee help:\n" + description);
-    }
 
-    protected String[] preprocessArgumentsString(String argsString) {
-        if (argsString != null) {
-            return argsString.trim().split(PARAM_DELIMITER);
-        } else {
-            return new String[]{};
-        }
+    protected boolean checkIsLogin(Session session) {
+        return session.getCurrentUser() != null;
     }
 
 }
