@@ -1,5 +1,7 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.user.User;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,24 +1,33 @@
-package ru.mail.track.Ermolaeva.tasks.messenger.session;
+package ru.mail.track.Ermolaeva.tasks.messenger.user;
 
-public class User {
-    private static long idCounter;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.Identified;
+
+public class User implements Identified {
     private Long id;
     private String name;
     private String password;
     private String nickname;
 
-    public User() {
-    }
 
-    public User(String username, String userPassword, String nickname) {
+    public User(String username, String userPassword, String userNickname) {
         this(username, userPassword);
-        this.nickname = nickname;
+        nickname = userNickname;
     }
 
     public User(String username, String userPassword) {
         name = username;
         password = userPassword;
-        id = idCounter++;
+    }
+
+    public User(Long id, String username, String userPassword, String userNickname) {
+        this(username, userPassword, userNickname);
+        setId(id);
+    }
+
+
+    public User(Long id, String username, String userPassword) {
+        this(username, userPassword);
+        setId(id);
     }
 
     public String getNickname() {
@@ -41,11 +50,11 @@ public class User {
         this.password = password;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

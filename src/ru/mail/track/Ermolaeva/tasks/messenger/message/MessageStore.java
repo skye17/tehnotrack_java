@@ -1,5 +1,9 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
+
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.GenericDaoUpdatable;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
+
 import java.util.List;
 
 /**
@@ -10,40 +14,46 @@ public interface MessageStore {
     /**
      * получаем список ид пользователей заданного чата
      */
-    List<Long> getChatsByUserId(Long userId);
+    List<Long> getChatsByUserId(Long userId) throws DataAccessException;
 
     /**
      * получить информацию о чате
      */
-    Chat getChatById(Long chatId);
+    Chat getChatById(Long chatId) throws DataAccessException;
+
+
+    GenericDaoUpdatable<Chat> getChatDao();
 
     /**
      * Список сообщений из чата
      */
-    List<Long> getMessagesFromChat(Long chatId);
+    List<Long> getMessagesFromChat(Long chatId) throws DataAccessException;
 
-    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern);
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern) throws DataAccessException;
 
-    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern, boolean caseFlag);
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern, boolean caseFlag) throws DataAccessException;
 
     /**
      * Получить информацию о сообщении
      */
-    ChatMessage getMessageById(Long messageId);
+    ChatMessage getMessageById(Long messageId) throws DataAccessException;
+
 
     /**
      * Добавить сообщение в чат
      */
-    void addMessage(Long messageId, Long chatId);
+    void addMessage(Long messageId, Long chatId) throws DataAccessException;
 
     /**
      * Добавить пользователя к чату
      */
-    void addUserToChat(Long userId, Long chatId);
+    Chat addUserToChat(Long userId, Long chatId) throws DataAccessException;
 
-    void addMessage(ChatMessage message);
+    void removeUserFromChat(Long userId, Long chatId) throws DataAccessException;
 
-    void addChat(Chat chat);
+    void addUsersToChat(List<Long> userIds, Long chatId) throws DataAccessException;
 
+    Long addMessageToStore(ChatMessage message) throws DataAccessException;
 
+    Long addChatToStore(Chat chat) throws DataAccessException;
 }

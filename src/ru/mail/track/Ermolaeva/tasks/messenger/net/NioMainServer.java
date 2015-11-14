@@ -6,46 +6,68 @@ import ru.mail.track.Ermolaeva.tasks.messenger.Interpreter;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.*;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.*;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions.IllegalCommandException;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.*;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.AbstractUserDao;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.QueryExecutor;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.SqlDaoFactory;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.UserStore;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageStore;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageStoreImpl;
+import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
 
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class MainServer {
+
+public class NioMainServer implements Runnable {
     public static final String PARAM_DELIMITER = "\\s+";
 
-    static Logger log = LoggerFactory.getLogger(MainServer.class);
+    public static final int PORT = 19000;
+    static Logger log = LoggerFactory.getLogger(NioMainServer.class);
 
-    private final ServerSocket serverSocket;
-    private final ExecutorService pool;
-
-    private AtomicLong internalCounter = new AtomicLong(0);
-    private Map<Long, ConnectionHandler> handlers = new HashMap<>();
+    private Protocol protocol;
     private SessionManager sessionManager;
-    private volatile boolean isRunning;
-
     private Interpreter interpreter;
 
-    public MainServer(int port, int poolSize,
-                      SessionManager sessionManager, Interpreter interpreter)
-            throws IOException {
-        serverSocket = new ServerSocket(port);
-        pool = Executors.newFixedThreadPool(poolSize);
+    private Selector selector;
+    private ServerSocketChannel socketChannel;
+
+    private Map<Socket, Session> socketSessions;
+    private Map<Socket, Result> socketResults;
+
+    private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
+
+    private BlockingQueue<SocketEvent> eventQueue = new ArrayBlockingQueue<>(10);
+    private ExecutorService service = Executors.newFixedThreadPool(5);
+
+
+    public static void main(String[] args) throws Exception {
+        QueryExecutor queryExecutor = new QueryExecutor(new SqlDaoFactory().getContext());
+        SessionManager sessionManager = new SessionManager();
+
+        AbstractUserDao userStore = new UserStore(queryExecutor);
+        MessageStore messageStore = new MessageStoreImpl(queryExecutor, sessionManager);
+
+        Interpreter interpreter = new Interpreter(getCommands(userStore, messageStore, sessionManager));
+
+        Protocol protocol = new SerializationProtocol();
+        NioMainServer server = new NioMainServer();
+        server.init(protocol, sessionManager, interpreter);
         System.out.println("Server started");
-        this.sessionManager = sessionManager;
-        this.interpreter = interpreter;
+        Thread t = new Thread(server);
+        t.start();
     }
 
     private static String[] checkArgumentsNumber(String input, int argumentsNumber) {
@@ -271,49 +293,145 @@ public class MainServer {
             }
         });
         commands.put(helpCommand.getName(), helpCommand);
-
         return commands;
     }
 
-    public static void main(String[] args) throws Exception {
-        try (DaoFactory daoFactory = new SqlDaoFactory()) {
-            QueryExecutor queryExecutor = new QueryExecutor((Connection) daoFactory.getContext());
-            SessionManager sessionManager = new SessionManager();
+    public void init(Protocol protocol, SessionManager sessionManager, Interpreter interpreter) throws Exception {
+        selector = Selector.open();
+        socketChannel = ServerSocketChannel.open();
 
-            AbstractUserDao userStore = new UserStore(queryExecutor);
-            MessageStore messageStore = new MessageStoreImpl(queryExecutor, sessionManager);
+        socketChannel.socket().bind(new InetSocketAddress(PORT));
+        socketChannel.configureBlocking(false);
 
-            Interpreter interpreter = new Interpreter(getCommands(userStore, messageStore, sessionManager));
+        socketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-            int port = 19000;
-            int poolSize = 4;
-            MainServer server = new MainServer(port, poolSize, sessionManager, interpreter);
+        this.protocol = protocol;
+        this.sessionManager = sessionManager;
+        this.interpreter = interpreter;
+        socketSessions = new HashMap<>();
+        socketResults = new HashMap<>();
 
-            server.startServer();
-        }
-    }
+        service.submit(() -> {
+            try {
+                while (true) {
+                    SocketEvent event = eventQueue.take();
+                    SocketChannel channel = event.getChannel();
+                    ByteBuffer buffer = event.getBuffer();
+                    Session session = socketSessions.get(channel.socket());
 
-    public void startServer() {
-        isRunning = true;
-        try {
-            while (isRunning) {
-                Socket socket = serverSocket.accept();
-                log.info("Accepted. " + socket.getInetAddress());
+                    SocketMessage socketMessage = this.protocol.decode(buffer.array());
 
-                ConnectionHandler handler = new SocketConnectionHandler(sessionManager.createSession(), socket);
-                handler.addListener(interpreter);
+                    if (socketMessage != null && socketMessage.getMessageType().equals(MessageType.COMMAND)) {
+                        Result result = this.interpreter.handleMessage(session, (CommandMessage) socketMessage);
+                        if (!socketResults.containsKey(channel.socket())) {
+                            socketResults.put(channel.socket(), result);
+                        }
+                    }
 
-                handlers.put(internalCounter.incrementAndGet(), handler);
-                pool.submit(handler);
+                    SelectionKey key = channel.keyFor(selector);
+                    key.interestOps(SelectionKey.OP_WRITE);
+                    selector.wakeup();
+                }
+
+            } catch (InterruptedException e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
             }
-        } catch (Exception ex) {
-            stopServer();
-            pool.shutdown();
-        }
+        });
+
     }
 
-    public void stopServer() {
-        isRunning = false;
-        handlers.values().forEach(ConnectionHandler::stop);
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                log.info("On select()");
+                int num = selector.select();
+                log.info("selected...");
+                if (num == 0) {
+                    continue;
+                }
+
+                Set<SelectionKey> keys = selector.selectedKeys();
+                Iterator<SelectionKey> it = keys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    it.remove();
+                    if (key.isAcceptable()) {
+                        log.info("[acceptable] {}", key.hashCode());
+
+                        SocketChannel socketChannel = ((ServerSocketChannel) key.channel()).accept();
+                        Socket socket = socketChannel.socket();
+
+                        socketChannel.configureBlocking(false);
+
+                        Session session = sessionManager.createSession();
+                        socketSessions.put(socket, session);
+                        log.info("accepted on {}", socketChannel.getLocalAddress());
+
+                        socketChannel.register(selector, SelectionKey.OP_READ);
+                    } else if (key.isReadable()) {
+                        log.info("[readable {}", key.hashCode());
+                        SocketChannel socketChannel = (SocketChannel) key.channel();
+
+                        readBuffer.clear();
+                        int numRead;
+                        try {
+                            numRead = socketChannel.read(readBuffer);
+                        } catch (IOException e) {
+                            log.error("Failed to read data from channel", e);
+
+                            // The remote forcibly closed the connection, cancel
+                            // the selection key and close the channel.
+                            key.cancel();
+                            socketChannel.close();
+                            break;
+                        }
+
+                        if (numRead == -1) {
+                            log.error("Failed to read data from channel (-1)");
+
+                            // Remote entity shut the socket down cleanly. Do the
+                            // same from our end and cancel the channel.
+                            key.channel().close();
+                            key.cancel();
+                            break;
+                        }
+
+                        log.info("read: {}", readBuffer.toString());
+                        readBuffer.flip();
+
+                        SocketEvent event = new SocketEvent();
+                        event.setChannel(socketChannel);
+                        event.setBuffer((ByteBuffer) readBuffer.flip());
+                        try {
+                            eventQueue.put(event);
+                        } catch (InterruptedException e) {
+                            System.err.println(e.getMessage());
+                            System.exit(1);
+                        }
+
+                    } else if (key.isWritable()) {
+                        log.info("[writable]{}", key.hashCode());
+                        SocketChannel socketChannel = (SocketChannel) key.channel();
+
+                        if (socketResults.containsKey(socketChannel.socket())) {
+                            SocketMessage message = socketResults.get(socketChannel.socket()).getMessage();
+                            byte[] encodedMessage = protocol.encode(message);
+                            if (encodedMessage != null) {
+                                ByteBuffer buf = ByteBuffer.wrap(encodedMessage);
+                                socketChannel.write(buf);
+                                buf = null;
+                            }
+                            socketResults.remove(socketChannel.socket());
+                        }
+                        key.interestOps(SelectionKey.OP_READ);
+                    }
+                }
+                keys.clear();
+            } catch (IOException e) {
+                System.exit(1);
+            }
+        }
     }
 }

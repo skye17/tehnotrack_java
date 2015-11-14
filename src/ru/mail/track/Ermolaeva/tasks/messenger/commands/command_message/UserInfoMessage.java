@@ -1,8 +1,7 @@
-package ru.mail.track.Ermolaeva.tasks.messenger.command_message;
+package ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message;
 
 
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandType;
-import ru.mail.track.Ermolaeva.tasks.messenger.net.CommandMessage;
 
 public class UserInfoMessage extends CommandMessage {
     private Long userId;

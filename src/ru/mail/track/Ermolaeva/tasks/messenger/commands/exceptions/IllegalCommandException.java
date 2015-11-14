@@ -1,4 +1,4 @@
-package ru.mail.track.Ermolaeva.tasks.messenger.exceptions;
+package ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions;
 
 public class IllegalCommandException extends IllegalArgumentException {
     public IllegalCommandException(String message) {

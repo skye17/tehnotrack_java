@@ -1,7 +1,7 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
 
-import ru.mail.track.Ermolaeva.tasks.messenger.command_message.HelpMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.HelpMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
 import java.util.ArrayList;
@@ -32,4 +32,5 @@ public class HelpCommand extends MessengerCommand<HelpMessage> {
         }
         return new CommandResult(result);
     }
+
 }

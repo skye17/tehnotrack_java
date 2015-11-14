@@ -2,6 +2,7 @@ package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
 
 import ru.mail.track.Ermolaeva.tasks.messenger.net.ConnectionHandler;
+import ru.mail.track.Ermolaeva.tasks.messenger.user.User;
 
 
 public class Session {

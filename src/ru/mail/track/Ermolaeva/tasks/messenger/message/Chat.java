@@ -1,17 +1,18 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.Identified;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class Chat {
-    private static long idCounter;
+public class Chat implements Identified {
     private Long id;
+    private String title;
 
     private List<Long> messageList;
     private List<Long> usersList;
 
     public Chat() {
-        id = idCounter++;
         messageList = new ArrayList<>();
         usersList = new ArrayList<>();
     }
@@ -40,27 +41,16 @@ public class Chat {
         this.usersList = usersList;
     }
 
-    public void addUser(Long userId) {
-        if (userId != null) {
-            usersList.add(userId);
-        }
-    }
-
-    public void removeUser(Long userId) {
-        if (userId != null) {
-            usersList.remove(userId);
-        }
-
-    }
-
-    public void addMessage(Long messageId) {
-        if (messageId != null && !messageList.contains(messageId)) {
-            messageList.add(messageId);
-        }
-    }
-
     public String getInfo() {
-        return String.format("Id: %d\nParticipants' ids: %s\nMessages' ids: %s\n", id, usersList, messageList);
+        return String.format("Id: %d\nParticipants' ids: %s\nMessages' ids: %s\nTitle: %s\n",
+                id, usersList, messageList, title);
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }

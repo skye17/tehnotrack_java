@@ -4,25 +4,26 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class ChatMessage extends Message {
-    private static long idCounter;
-
     private Long chatId;
     private String message;
-    private String timestamp;
+    private Date timestamp;
 
-    public ChatMessage() {
+    public ChatMessage(Long id, Long senderId, Long chatId, Date timestamp, String message) {
+        this(message, senderId, chatId);
+        setId(id);
+        setTimestamp(timestamp);
     }
 
     public ChatMessage(String message) {
-        id = idCounter++;
         this.message = message;
-        timestamp = Calendar.getInstance().getTime().toString();
+        timestamp = Calendar.getInstance().getTime();
     }
 
 
-    public ChatMessage(String message, long senderId) {
+    public ChatMessage(String message, Long senderId, Long chatId) {
         this(message);
         this.senderId = senderId;
+        this.chatId = chatId;
     }
 
     public String getMessage() {
@@ -33,16 +34,11 @@ public class ChatMessage extends Message {
         this.message = message;
     }
 
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp.toString();
-    }
-
-    public String getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -57,10 +53,11 @@ public class ChatMessage extends Message {
     @Override
     public String toString() {
         return "Message{" +
-                ", sender=" + senderId +
+                "sender=" + senderId +
                 ", timestamp=" + timestamp +
                 ", chatId=" + chatId +
                 ", message=" + message +
-                '}';
+                "}";
+
     }
 }

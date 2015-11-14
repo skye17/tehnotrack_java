@@ -1,11 +1,11 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
-public abstract class Message {
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.Identified;
+
+public abstract class Message implements Identified {
     protected Long id;
     protected Long senderId;
 
-    public Message() {
-    }
 
     public Long getId() {
         return id;

@@ -2,8 +2,8 @@ package ru.mail.track.Ermolaeva.tasks.messenger.net;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import ru.mail.track.Ermolaeva.tasks.messenger.InputHandler;
-import ru.mail.track.Ermolaeva.tasks.messenger.ParserFactory;
-import ru.mail.track.Ermolaeva.tasks.messenger.command_message.LogoutMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandType;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
 import java.io.IOException;
@@ -41,13 +41,12 @@ public class ThreadedClient implements MessageListener {
             if (scanner.hasNextLine()) {
                 String input = scanner.nextLine();
                 if ("/exit".equals(input)) {
-                    client.handler.send(new LogoutMessage());
+                    client.handler.send(new CommandMessage(CommandType.LOGOUT));
                     System.exit(0);
                 }
 
                 try {
-                    ParserFactory parserFactory = new ParserFactory();
-                    client.handler.send(new InputHandler(parserFactory).processInput(input));
+                    client.handler.send(new InputHandler().processInput(input));
                 } catch (IllegalArgumentException ex) {
                     System.out.println(ex.getMessage());
                 }

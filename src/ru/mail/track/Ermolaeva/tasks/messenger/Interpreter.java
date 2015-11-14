@@ -5,8 +5,9 @@ import ru.mail.track.Ermolaeva.tasks.messenger.commands.Command;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandResult;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandType;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.Result;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions.IllegalCommandException;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
-import ru.mail.track.Ermolaeva.tasks.messenger.net.CommandMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.MessageListener;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.SocketMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
@@ -25,10 +26,15 @@ public class Interpreter implements MessageListener {
 
 
     public Result handleMessage(Session session, CommandMessage message) {
-        if (commands.containsKey(message.getCommandType())) {
-            return commands.get(message.getCommandType()).execute(session, message);
-        } else {
-            return new CommandResult("Invalid command", true);
+        try {
+            if (commands.containsKey(message.getCommandType())) {
+                CommandMessage commandMessage = commands.get(message.getCommandType()).getArgumentParser().apply(message.getInputString());
+                return commands.get(message.getCommandType()).execute(session, commandMessage);
+            } else {
+                return new CommandResult("Invalid command", true);
+            }
+        } catch (IllegalCommandException e) {
+            return new CommandResult("Invalid command usage: " + e.getMessage(), true);
         }
     }
 
@@ -40,6 +46,7 @@ public class Interpreter implements MessageListener {
             try {
                 session.getConnectionHandler().send(commandResult.getMessage());
             } catch (IOException io) {
+
             }
         }
     }

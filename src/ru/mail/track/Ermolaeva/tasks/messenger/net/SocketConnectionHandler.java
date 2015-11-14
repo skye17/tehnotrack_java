@@ -71,7 +71,6 @@ public class SocketConnectionHandler implements ConnectionHandler {
                 }
             } catch (Exception e) {
                 log.error("Failed to handle connection: {}", e);
-                e.printStackTrace();
                 Thread.currentThread().interrupt();
             }
         }

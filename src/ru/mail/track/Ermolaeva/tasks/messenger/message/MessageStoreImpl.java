@@ -1,7 +1,10 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.*;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.ResponseMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
 
 import java.io.IOException;
@@ -12,79 +15,69 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MessageStoreImpl implements MessageStore {
-    private Map<Long, Chat> chatStore;
-    private Map<Long, ChatMessage> messageStore;
-    private Map<Long, List<Long>> userChatsStore;
+    private AbstractChatMessageDao chatMessageDao;
+    private GenericDaoUpdatable<Chat> chatDao;
+    private RelationshipDao userChatsDao;
+
     private SessionManager sessionManager;
 
-
-    public MessageStoreImpl() {
-        chatStore = new HashMap<>();
-        messageStore = new HashMap<>();
-        userChatsStore = new HashMap<>();
+    public MessageStoreImpl(QueryExecutor queryExecutor) {
+        chatMessageDao = new ChatMessageDao(queryExecutor);
+        chatDao = new ChatDao(queryExecutor);
+        userChatsDao = new UserChatsDao(queryExecutor);
     }
 
-    public MessageStoreImpl(SessionManager sessionManager) {
-        chatStore = new HashMap<>();
-        messageStore = new HashMap<>();
-        userChatsStore = new HashMap<>();
+    public MessageStoreImpl(QueryExecutor queryExecutor, SessionManager sessionManager) {
+        this(queryExecutor);
         this.sessionManager = sessionManager;
     }
 
-    private void saveToDatabase() {
-
+    public GenericDaoUpdatable<Chat> getChatDao() {
+        return chatDao;
     }
 
-    /**
-     * получаем список чатов данного пользователя
-     *
-     * @param userId
-     */
+
     @Override
-    public List<Long> getChatsByUserId(Long userId) {
+    public List<Long> getChatsByUserId(Long userId) throws DataAccessException {
         if (userId != null) {
-            if (!userChatsStore.containsKey(userId)) {
-                userChatsStore.put(userId, new ArrayList<>());
-            }
-            return userChatsStore.get(userId);
+            return userChatsDao.getByFirstKey(userId);
         }
         return null;
     }
 
-    /**
-     * получить информацию о чате
-     *
-     * @param chatId
-     */
+
     @Override
-    public Chat getChatById(Long chatId) {
+    public Chat getChatById(Long chatId) throws DataAccessException {
         if (chatId != null) {
-            return chatStore.get(chatId);
+
+            Chat chat = chatDao.getById(chatId);
+            if (chat != null) {
+                List<Long> messages = chatMessageDao.getMessagesFromChat(chatId);
+                List<Long> users = userChatsDao.getBySecondKey(chatId);
+                chat.setUsersList(users);
+                chat.setMessageList(messages);
+            }
+            return chat;
         }
         return null;
     }
 
-    /**
-     * Список сообщений из чата
-     *
-     * @param chatId
-     */
     @Override
-    public List<Long> getMessagesFromChat(Long chatId) {
-        Chat chat = getChatById(chatId);
-        if (chat != null) {
+    public List<Long> getMessagesFromChat(Long chatId) throws DataAccessException {
+        if (chatId != null) {
+            Chat chat = getChatById(chatId);
             return chat.getMessageList();
         }
         return null;
     }
 
     @Override
-    public List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String regex) {
+    public List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String regex) throws DataAccessException {
         return getMessagesFromChatByRegex(chatId, regex, true);
     }
 
     @Override
-    public List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String regex, boolean caseFlag) {
+    public List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String regex, boolean caseFlag) throws DataAccessException {
         ArrayList<ChatMessage> result = new ArrayList<>();
         List<Long> messagesIdList = getMessagesFromChat(chatId);
         if (messagesIdList != null) {
@@ -102,35 +95,22 @@ public class MessageStoreImpl implements MessageStore {
         return result;
     }
 
-    /**
-     * Получить информацию о сообщении
-     *
-     * @param messageId
-     */
+
     @Override
-    public ChatMessage getMessageById(Long messageId) {
+    public ChatMessage getMessageById(Long messageId) throws DataAccessException {
         if (messageId != null) {
-            return messageStore.get(messageId);
+            return chatMessageDao.getById(messageId);
         }
         return null;
     }
 
-    /**
-     * Добавить сообщение в чат
-     *
-     * @param messageId
-     * @param chatId
-     */
-
-    // TODO Возможно сделать его observable и рассылать observerам(участникам чата) уведомления о новых сообщениях
     @Override
-    public void addMessage(Long messageId, Long chatId) {
+    public void addMessage(Long messageId, Long chatId) throws DataAccessException {
         if (messageId != null && chatId != null) {
             Chat chat = getChatById(chatId);
-            if (chat != null) {
-                chat.addMessage(messageId);
-                List<Long> usersList = new ArrayList<>(chat.getUsersList());
 
+            if (chat != null) {
+                List<Long> usersList = new ArrayList<>(chat.getUsersList());
                 ResponseMessage responseMessage = new ResponseMessage();
                 ObjectMapper mapper = new ObjectMapper();
                 String notification = "New message in chat " + chatId;
@@ -140,46 +120,55 @@ public class MessageStoreImpl implements MessageStore {
                     responseMessage.setResultClass(String.class.getName());
                     usersList.remove(getMessageById(messageId).getSender());
                     for (Long userId : usersList) {
-                        sessionManager.getSessionByUser(userId).getConnectionHandler().send(responseMessage);
+                        Session session = sessionManager.getSessionByUser(userId);
+                        if (session != null) {
+                            sessionManager.getSessionByUser(userId).getConnectionHandler().send(responseMessage);
+                        }
                     }
                 } catch (IOException e) {
-                    //TODO
+                    throw new DataAccessException(e);
                 }
-
-
             }
         }
 
     }
 
-    /**
-     * Добавить пользователя к чату
-     *
-     * @param userId
-     * @param chatId
-     */
     @Override
-    public void addUserToChat(Long userId, Long chatId) {
+    public Chat addUserToChat(Long userId, Long chatId) throws DataAccessException {
         if (userId != null && chatId != null) {
-            Chat chat = getChatById(chatId);
-            if (chat != null) {
-                chat.addUser(userId);
-                if (!userChatsStore.containsKey(userId)) {
-                    userChatsStore.put(userId, new ArrayList<>());
-                }
-                userChatsStore.get(userId).add(chatId);
-            }
+            userChatsDao.addLink(userId, chatId);
+            return getChatById(chatId);
+        }
+        return null;
+    }
+
+    @Override
+    public void addUsersToChat(List<Long> userIds, Long chatId) throws DataAccessException {
+        Map<Long, Long> ids = new HashMap<>();
+        for (Long userId : userIds) {
+            ids.put(userId, chatId);
+        }
+        userChatsDao.addManyLinks(ids);
+    }
+
+    @Override
+    public void removeUserFromChat(Long userId, Long chatId) throws DataAccessException {
+        if (userId != null && chatId != null) {
+            userChatsDao.removeLink(userId, chatId);
         }
     }
 
     @Override
-    public void addMessage(ChatMessage message) {
-        messageStore.put(message.getId(), message);
+    public Long addMessageToStore(ChatMessage message) throws DataAccessException {
+        message = chatMessageDao.add(message);
+        return message.getId();
     }
 
     @Override
-    public void addChat(Chat chat) {
-        chatStore.put(chat.getId(), chat);
+    public Long addChatToStore(Chat chat) throws DataAccessException {
+        chat = chatDao.add(chat);
+        return chat.getId();
+
     }
 
 }
