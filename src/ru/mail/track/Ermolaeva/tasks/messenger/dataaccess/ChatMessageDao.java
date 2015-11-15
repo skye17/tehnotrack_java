@@ -14,6 +14,8 @@ public class ChatMessageDao extends AbstractChatMessageDao {
 
     public ChatMessageDao(QueryExecutor queryExecutor) {
         super(queryExecutor);
+
+        // FIXME: а это хардкод. Как минимум вынесите имена полей в константы
         setTableName("chatmessages");
         List<String> columnNamesList = new ArrayList<>();
         relationshipDao = new RelationshipDao(queryExecutor, tableName);

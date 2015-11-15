@@ -11,6 +11,7 @@ import java.util.Map;
  * Обертка для запроса в базу
  */
 public class QueryExecutor {
+
     private Connection connection;
 
     public QueryExecutor(Connection connection) {

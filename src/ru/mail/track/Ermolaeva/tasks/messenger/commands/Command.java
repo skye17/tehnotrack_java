@@ -5,8 +5,11 @@ import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandM
 import java.util.function.Function;
 
 public interface Command {
+
+    // FIXME: а state почему Object? Какой смысл?
     Result execute(Object state, CommandMessage message);
 
+    // FIXME: reanme -> getType()
     CommandType getName();
 
     String getDescription();

@@ -285,6 +285,7 @@ public class MainServer {
 
             Interpreter interpreter = new Interpreter(getCommands(userStore, messageStore, sessionManager));
 
+            // FIXME: вынести в константы порт и размер пула
             int port = 19000;
             int poolSize = 4;
             MainServer server = new MainServer(port, poolSize, sessionManager, interpreter);

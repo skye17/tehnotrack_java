@@ -15,6 +15,8 @@ public class CommandResult implements Result {
     }
 
     public CommandResult(Object object, boolean errorStatus) {
+
+        // FIXME: надо вынести в Protocol (JsonProtocol implements Protocol)
         message = new ResponseMessage();
         try {
             ObjectMapper mapper = new ObjectMapper();

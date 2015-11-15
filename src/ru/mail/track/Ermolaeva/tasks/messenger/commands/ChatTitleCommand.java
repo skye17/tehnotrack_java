@@ -19,6 +19,7 @@ public class ChatTitleCommand extends ChatCommand<ChatTitleMessage> {
         Chat chat = messageStore.getChatById(commandMessage.getChatId());
         chat.setTitle(commandMessage.getChatTitle());
         //не оч
+        // TODO: Ага, наружу пролезла реализация - БД
         messageStore.getChatDao().update(chat, new int[]{2});
         return new CommandResult(chat.getInfo());
     }

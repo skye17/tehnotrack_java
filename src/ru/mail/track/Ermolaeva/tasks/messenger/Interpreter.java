@@ -28,6 +28,7 @@ public class Interpreter implements MessageListener {
     public Result handleMessage(Session session, CommandMessage message) {
         try {
             if (commands.containsKey(message.getCommandType())) {
+                // TODO: очень интересный способ, generics хорошо использованы при обработке сообщений
                 CommandMessage commandMessage = commands.get(message.getCommandType()).getArgumentParser().apply(message.getInputString());
                 return commands.get(message.getCommandType()).execute(session, commandMessage);
             } else {

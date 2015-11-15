@@ -22,6 +22,7 @@ public interface MessageStore {
     Chat getChatById(Long chatId) throws DataAccessException;
 
 
+    // TODO: в интерфейс пролезла реализация (database)
     GenericDaoUpdatable<Chat> getChatDao();
 
     /**

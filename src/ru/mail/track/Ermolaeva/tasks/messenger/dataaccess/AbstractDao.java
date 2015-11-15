@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+// TODO: да, полезный класс получился
 public abstract class AbstractDao<T extends Identified> implements GenericDao<T> {
     protected final static String ID_CLAUSE = " WHERE id= ?;";
     private final static String SELECT_ALL_QUERY = "SELECT * FROM ";
@@ -77,6 +77,7 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
      * Создает новую запись, соответствующую объекту object
      */
     @Override
+    // TODO: rename object->item
     public T add(T object) throws DataAccessException {
         if (object.getId() != null) {
             throw new DataAccessException("Object already exists.");

@@ -6,7 +6,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-
+// TODO: не уверен, что DAOFactory что-то улучшает в вашем случае. Конект к базе можно создать и в QueryExecutor
+// на ваше усмотрение
 public class SqlDaoFactory implements DaoFactory<Connection> {
     private String driver = "org.postgresql.Driver";
     private String url = "jdbc:postgresql://178.62.140.149:5432/skye17";
@@ -43,6 +44,8 @@ public class SqlDaoFactory implements DaoFactory<Connection> {
             try {
                 connection.close();
             } catch (SQLException e) {
+                // FIXME: вобщем то нам это неинтересно, все равно ничего сделать не можем. Конкретно здесь
+                // можно не кидать исключение
                 throw new DataAccessException("Error closing connection");
             }
         }
