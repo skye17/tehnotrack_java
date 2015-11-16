@@ -24,10 +24,10 @@ public class HelpCommand extends MessengerCommand<HelpMessage> {
         CommandType queryCommand = commandMessage.getCommand();
         List<String> result = new ArrayList<>();
         if (queryCommand != null) {
-            result.add(commands.get(queryCommand).getName() + ":" + commands.get(queryCommand).getDescription() + "\n");
+            result.add(commands.get(queryCommand).getType() + ":" + commands.get(queryCommand).getDescription() + "\n");
         } else {
             for (Command command : commands.values()) {
-                result.add(command.getName() + ":" + command.getDescription() + "\n");
+                result.add(command.getType() + ":" + command.getDescription() + "\n");
             }
         }
         return new CommandResult(result);

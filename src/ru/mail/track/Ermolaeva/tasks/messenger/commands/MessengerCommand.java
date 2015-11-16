@@ -32,14 +32,13 @@ public abstract class MessengerCommand<T extends CommandMessage> implements Comm
     }
 
     @Override
-    public Result execute(Object state, CommandMessage message) {
-        if (state != null && state instanceof Session) {
-            Session session = (Session) state;
-            if (needLogin && !checkIsLogin(session)) {
+    public Result execute(Session state, CommandMessage message) {
+        if (state != null) {
+            if (needLogin && !checkIsLogin(state)) {
                 return new CommandResult("You need to login first", true);
             }
             try {
-                return executeCommand(session, (T) message);
+                return executeCommand(state, (T) message);
             } catch (DataAccessException | IllegalDataStateException e) {
                 return new CommandResult(e.getMessage(), true);
             }
@@ -52,7 +51,7 @@ public abstract class MessengerCommand<T extends CommandMessage> implements Comm
 
 
     @Override
-    public CommandType getName() {
+    public CommandType getType() {
         return commandType;
     }
 
@@ -73,16 +72,5 @@ public abstract class MessengerCommand<T extends CommandMessage> implements Comm
     protected boolean checkIsLogin(Session session) {
         return session.getCurrentUser() != null;
     }
-
-    /*
-    protected String[] checkArgumentsNumber(String input, int argumentsNumber) {
-        String[] tokens = input.split(PARAM_DELIMITER);
-        if (tokens.length != argumentsNumber) {
-            throw new IllegalCommandException("Wrong number of arguments: expected " + argumentsNumber
-                    + ". Type /help <command> for more information");
-        } else {
-            return tokens;
-        }
-    }*/
 
 }

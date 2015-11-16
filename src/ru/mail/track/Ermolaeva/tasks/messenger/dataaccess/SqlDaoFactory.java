@@ -39,14 +39,12 @@ public class SqlDaoFactory implements DaoFactory<Connection> {
 
 
     @Override
-    public void close() throws DataAccessException {
+    public void close() {
         if (connection != null) {
             try {
                 connection.close();
             } catch (SQLException e) {
-                // FIXME: вобщем то нам это неинтересно, все равно ничего сделать не можем. Конкретно здесь
-                // можно не кидать исключение
-                throw new DataAccessException("Error closing connection");
+                System.err.println(e.getMessage());
             }
         }
     }

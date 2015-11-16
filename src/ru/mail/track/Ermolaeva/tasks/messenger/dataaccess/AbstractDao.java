@@ -77,22 +77,21 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
      * Создает новую запись, соответствующую объекту object
      */
     @Override
-    // TODO: rename object->item
-    public T add(T object) throws DataAccessException {
-        if (object.getId() != null) {
+    public T add(T item) throws DataAccessException {
+        if (item.getId() != null) {
             throw new DataAccessException("Object already exists.");
         }
 
         String sql = getInsertQuery();
-        Map<Integer, Object> values = prepareValuesForInsert(object);
+        Map<Integer, Object> values = prepareValuesForInsert(item);
 
         Long objectId = queryExecutor.executeUpdateReturningId(sql, values);
         if (objectId == null) {
             throw new IllegalDataStateException("Exception on new inserted record.");
         }
-        object.setId(objectId);
+        item.setId(objectId);
 
-        return object;
+        return item;
     }
 
     @Override

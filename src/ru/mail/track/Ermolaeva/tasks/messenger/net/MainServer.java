@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MainServer {
     public static final String PARAM_DELIMITER = "\\s+";
-
+    public static final int PORT = 19000;
+    public static final int POOLSIZE = 4;
     static Logger log = LoggerFactory.getLogger(MainServer.class);
 
     private final ServerSocket serverSocket;
@@ -69,7 +70,7 @@ public class MainServer {
             commandMessage.setPass(tokens[1]);
             return commandMessage;
         });
-        commands.put(loginCommand.getName(), loginCommand);
+        commands.put(loginCommand.getType(), loginCommand);
 
         Command userCommand = new UserCommand(userStore);
         userCommand.setArgumentParser(argInput -> {
@@ -78,7 +79,7 @@ public class MainServer {
             commandMessage.setNickname(tokens[0]);
             return commandMessage;
         });
-        commands.put(userCommand.getName(), userCommand);
+        commands.put(userCommand.getType(), userCommand);
 
         Command userInfoCommand = new UserInfoCommand(userStore);
         userInfoCommand.setArgumentParser(argInput -> {
@@ -95,7 +96,7 @@ public class MainServer {
                 }
             }
         });
-        commands.put(userInfoCommand.getName(), userInfoCommand);
+        commands.put(userInfoCommand.getType(), userInfoCommand);
 
         Command userPassCommand = new UserPassCommand(userStore);
         userPassCommand.setArgumentParser(argInput -> {
@@ -105,7 +106,7 @@ public class MainServer {
             commandMessage.setNewPassword(tokens[1]);
             return commandMessage;
         });
-        commands.put(userPassCommand.getName(), userPassCommand);
+        commands.put(userPassCommand.getType(), userPassCommand);
 
         Command chatCreateCommand = new ChatCreateCommand(messageStore, userStore);
         chatCreateCommand.setArgumentParser(argInput -> {
@@ -125,18 +126,18 @@ public class MainServer {
             chatCreateMessage.setUserIdList(usersIdList);
             return chatCreateMessage;
         });
-        commands.put(chatCreateCommand.getName(), chatCreateCommand);
+        commands.put(chatCreateCommand.getType(), chatCreateCommand);
 
         Command chatListCommand = new ChatListCommand(messageStore);
         chatListCommand.setArgumentParser(argInput -> {
             if (argInput.equals("")) {
-                return new ChatCommandMessage(chatListCommand.getName());
+                return new ChatCommandMessage(chatListCommand.getType());
             } else {
                 throw new IllegalCommandException("Wrong number of arguments. " +
                         "Type /help chat_list for more information.");
             }
         });
-        commands.put(chatListCommand.getName(), chatListCommand);
+        commands.put(chatListCommand.getType(), chatListCommand);
 
 
         Command chatHistoryCommand = new ChatHistoryCommand(messageStore);
@@ -151,7 +152,7 @@ public class MainServer {
                 throw new IllegalCommandException("Chat id should be a number");
             }
         });
-        commands.put(chatHistoryCommand.getName(), chatHistoryCommand);
+        commands.put(chatHistoryCommand.getType(), chatHistoryCommand);
 
         Command chatFindCommand = new ChatFindCommand(messageStore);
         chatFindCommand.setArgumentParser(argInput -> {
@@ -173,7 +174,7 @@ public class MainServer {
                 }
             }
         });
-        commands.put(chatFindCommand.getName(), chatFindCommand);
+        commands.put(chatFindCommand.getType(), chatFindCommand);
 
         Command chatSendCommand = new ChatSendCommand(messageStore);
         chatSendCommand.setArgumentParser(argInput -> {
@@ -196,35 +197,35 @@ public class MainServer {
 
             }
         });
-        commands.put(chatSendCommand.getName(), chatSendCommand);
+        commands.put(chatSendCommand.getType(), chatSendCommand);
 
         Command chatJoinCommand = new ChatJoinCommand(messageStore);
         chatJoinCommand.setArgumentParser(argInput -> {
             String[] tokens = checkArgumentsNumber(argInput, 1);
             try {
                 Long value = Long.valueOf(tokens[0]);
-                ChatCommandMessage chatCommandMessage = new ChatCommandMessage(chatJoinCommand.getName());
+                ChatCommandMessage chatCommandMessage = new ChatCommandMessage(chatJoinCommand.getType());
                 chatCommandMessage.setChatId(value);
                 return chatCommandMessage;
             } catch (NumberFormatException ex) {
                 throw new IllegalCommandException("Chat id should be a number");
             }
         });
-        commands.put(chatJoinCommand.getName(), chatJoinCommand);
+        commands.put(chatJoinCommand.getType(), chatJoinCommand);
 
         Command chatLeaveCommand = new ChatLeaveCommand(messageStore);
         chatLeaveCommand.setArgumentParser(argInput -> {
             String[] tokens = checkArgumentsNumber(argInput, 1);
             try {
                 Long value = Long.valueOf(tokens[0]);
-                ChatCommandMessage chatCommandMessage = new ChatCommandMessage(chatLeaveCommand.getName());
+                ChatCommandMessage chatCommandMessage = new ChatCommandMessage(chatLeaveCommand.getType());
                 chatCommandMessage.setChatId(value);
                 return chatCommandMessage;
             } catch (NumberFormatException ex) {
                 throw new IllegalCommandException("Chat id should be a number");
             }
         });
-        commands.put(chatLeaveCommand.getName(), chatLeaveCommand);
+        commands.put(chatLeaveCommand.getType(), chatLeaveCommand);
 
         Command chatTitleCommand = new ChatTitleCommand(messageStore);
         chatTitleCommand.setArgumentParser(argInput -> {
@@ -246,14 +247,14 @@ public class MainServer {
                 }
             }
         });
-        commands.put(chatTitleCommand.getName(), chatTitleCommand);
+        commands.put(chatTitleCommand.getType(), chatTitleCommand);
 
         Command logoutCommand = new LogoutCommand(sessionManager);
         logoutCommand.setArgumentParser(argInput -> {
             checkArgumentsNumber(argInput, 1);
-            return new CommandMessage(logoutCommand.getName());
+            return new CommandMessage(logoutCommand.getType());
         });
-        commands.put(logoutCommand.getName(), logoutCommand);
+        commands.put(logoutCommand.getType(), logoutCommand);
 
         Command helpCommand = new HelpCommand(commands);
         helpCommand.setArgumentParser(argInput -> {
@@ -270,7 +271,7 @@ public class MainServer {
                 }
             }
         });
-        commands.put(helpCommand.getName(), helpCommand);
+        commands.put(helpCommand.getType(), helpCommand);
 
         return commands;
     }
@@ -285,10 +286,7 @@ public class MainServer {
 
             Interpreter interpreter = new Interpreter(getCommands(userStore, messageStore, sessionManager));
 
-            // FIXME: вынести в константы порт и размер пула
-            int port = 19000;
-            int poolSize = 4;
-            MainServer server = new MainServer(port, poolSize, sessionManager, interpreter);
+            MainServer server = new MainServer(PORT, POOLSIZE, sessionManager, interpreter);
 
             server.startServer();
         }

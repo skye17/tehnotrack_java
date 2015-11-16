@@ -1,7 +1,5 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.net;
 
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.track.Ermolaeva.tasks.messenger.InputHandler;
@@ -26,19 +24,22 @@ public class NioClient {
     public static final String HOST = "localhost";
     static Logger log = LoggerFactory.getLogger(NioClient.class);
     private Protocol protocol;
+    private ObjectProtocol objectProtocol;
 
     private Selector selector;
     private SocketChannel channel;
     private ByteBuffer buffer = ByteBuffer.allocate(8192);
     private BlockingQueue<CommandMessage> inputQueue = new ArrayBlockingQueue<>(10);
 
-    public NioClient(Protocol protocol) {
+    public NioClient(Protocol protocol, ObjectProtocol objectProtocol) {
         this.protocol = protocol;
+        this.objectProtocol = objectProtocol;
     }
 
     public static void main(String[] args) throws Exception {
         Protocol protocol = new SerializationProtocol();
-        NioClient client = new NioClient(protocol);
+        ObjectProtocol objectProtocol = new JsonProtocol();
+        NioClient client = new NioClient(protocol, objectProtocol);
         client.start();
     }
 
@@ -126,18 +127,12 @@ public class NioClient {
     private void processServerResponse(SocketMessage serverResponse) {
         if (serverResponse != null && serverResponse.getMessageType().equals(MessageType.RESPONSE)) {
             ResponseMessage responseMessage = (ResponseMessage) serverResponse;
-            ObjectMapper mapper = new ObjectMapper();
-            Object object;
-            try {
-                Class objectClass = Class.forName(responseMessage.getResultClass());
-                object = mapper.readValue(responseMessage.getResponse(), objectClass);
-                if (responseMessage.getStatus()) {
-                    System.out.println("Error!");
-                }
-                System.out.printf("%s\n", object);
+            Object responseObject = objectProtocol.encode(responseMessage);
+            if (responseObject != null) {
+                System.out.printf("%s\n", responseObject);
                 System.out.println("$");
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.println("Can't decode server response: " + e.getMessage());
+            } else {
+                System.out.println("Error: can't decode server response.");
             }
         } else {
             System.out.println("Wrong server response");

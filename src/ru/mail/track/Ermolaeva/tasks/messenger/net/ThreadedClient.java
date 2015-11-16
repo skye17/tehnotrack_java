@@ -1,8 +1,5 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.net;
 
-
-// TODO: это кстати старый Jackson не рекомендуемый к использованию
-import org.codehaus.jackson.map.ObjectMapper;
 import ru.mail.track.Ermolaeva.tasks.messenger.InputHandler;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandType;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
@@ -18,13 +15,14 @@ public class ThreadedClient implements MessageListener {
     public static final int PORT = 19000;
     public static final String HOST = "localhost";
     private ConnectionHandler handler;
+    private ObjectProtocol protocol;
 
-    public ThreadedClient() {
+    public ThreadedClient(ObjectProtocol protocol) {
         try {
             Socket socket = new Socket(HOST, PORT);
             handler = new SocketConnectionHandler(socket);
             handler.addListener(this);
-
+            this.protocol = protocol;
             Thread socketHandler = new Thread(handler);
             socketHandler.start();
         } catch (UnknownHostException e) {
@@ -36,8 +34,10 @@ public class ThreadedClient implements MessageListener {
     }
 
     public static void main(String[] args) throws Exception {
-        ThreadedClient client = new ThreadedClient();
+        ObjectProtocol protocol = new JsonProtocol();
+        ThreadedClient client = new ThreadedClient(protocol);
         Scanner scanner = new Scanner(System.in);
+        InputHandler inputHandler = new InputHandler();
         System.out.println("$");
         while (true) {
             if (scanner.hasNextLine()) {
@@ -48,8 +48,7 @@ public class ThreadedClient implements MessageListener {
                 }
 
                 try {
-                    //FIXME: зачем на каждую итерацию создвать новый InputHandler? Это ошибка
-                    client.handler.send(new InputHandler().processInput(input));
+                    client.handler.send(inputHandler.processInput(input));
                 } catch (IllegalArgumentException ex) {
                     System.out.println(ex.getMessage());
                 }
@@ -62,23 +61,13 @@ public class ThreadedClient implements MessageListener {
 
     @Override
     public void update(Session session, SocketMessage message) {
-        // FIXME: Это должно быть в Protocol, потому что клиенту не следует знать, в каком виде данные ходят по сети
         ResponseMessage responseMessage = (ResponseMessage) message;
-        ObjectMapper mapper = new ObjectMapper();
-        Object object;
-        try {
-            Class objectClass = Class.forName(responseMessage.getResultClass());
-            object = mapper.readValue(responseMessage.getResponse(), objectClass);
-            if (responseMessage.getStatus()) {
-                System.out.println("Error!");
-            }
-
-            // FIXME: тем более вы смешали вывод данных с протоколом взаимодействия
-            System.out.printf("%s\n", object);
+        Object serverResponse = protocol.encode(responseMessage);
+        if (serverResponse != null) {
+            System.out.printf("%s\n", serverResponse);
             System.out.println("$");
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Can't decode server response: " + e.getMessage());
+        } else {
+            System.out.println("Error: can't decode server response.");
         }
-
     }
 }
