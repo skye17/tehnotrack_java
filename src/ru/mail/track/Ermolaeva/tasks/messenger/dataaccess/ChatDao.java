@@ -11,24 +11,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ChatDao extends AbstractDaoUpdatable<Chat> {
+public class ChatDao extends AbstractDao<Chat> {
 
-    public ChatDao(QueryExecutor queryExecutor) {
-        super(queryExecutor, "chats");
-        List<String> columnNamesList = new ArrayList<>();
-        columnNamesList.add("id");
-        columnNamesList.add("chat_title");
-        setColumnNames(columnNamesList);
+    public ChatDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
+        super(queryExecutor, tableProvider, tableType);
     }
 
 
     @Override
-    protected Map<Integer, Object> prepareValuesForUpdate(Chat object, int[] columnIndexes) throws DataAccessException {
+    protected Map<Integer, Object> prepareValuesForUpdate(Chat object) throws DataAccessException {
         if (object.getId() == null) {
             throw new DataAccessException("No such chat");
         }
         String updateField;
-        if (columnIndexes.length == 1 && columnIndexes[0] == 2) {
+        if (updateIndexes.size() == 1 && updateIndexes.get(0) == 2) {
             updateField = object.getTitle();
         } else {
             throw new DataAccessException("This update operation is not supported");

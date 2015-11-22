@@ -9,31 +9,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
-public class ChatMessageDao extends AbstractChatMessageDao {
-    private RelationshipDao relationshipDao;
-
-    public ChatMessageDao(QueryExecutor queryExecutor) {
-        super(queryExecutor);
-
-        // FIXME: а это хардкод. Как минимум вынесите имена полей в константы
-        setTableName("chatmessages");
-        List<String> columnNamesList = new ArrayList<>();
-        relationshipDao = new RelationshipDao(queryExecutor, tableName);
-        columnNamesList.add("id");
-        columnNamesList.add("chatid");
-        relationshipDao.setColumnNames(new ArrayList<>(columnNamesList));
-
-        columnNamesList.remove("chatid");
-        columnNamesList.add("sender");
-        columnNamesList.add("chatid");
-        columnNamesList.add("pubdate");
-        columnNamesList.add("messagetext");
-        setColumnNames(columnNamesList);
-    }
-
-    @Override
-    public String getInsertQuery() {
-        return "INSERT INTO " + tableName + " (sender, chatid, pubdate, messageText) VALUES (?, ?, ?, ?);";
+public class ChatMessageDao extends AbstractDao<ChatMessage> {
+    public ChatMessageDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
+        super(queryExecutor, tableProvider, tableType);
     }
 
 
@@ -71,8 +49,8 @@ public class ChatMessageDao extends AbstractChatMessageDao {
     }
 
     @Override
-    public List<Long> getMessagesFromChat(Long chatId) throws DataAccessException {
-        return relationshipDao.getBySecondKey(chatId);
+    protected Map<Integer, Object> prepareValuesForUpdate(ChatMessage object) throws DataAccessException {
+        return null;
     }
 
 }

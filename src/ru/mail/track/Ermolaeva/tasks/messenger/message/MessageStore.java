@@ -1,7 +1,5 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
-
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.GenericDaoUpdatable;
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
 
 import java.util.List;
@@ -19,11 +17,10 @@ public interface MessageStore {
     /**
      * получить информацию о чате
      */
+
     Chat getChatById(Long chatId) throws DataAccessException;
 
-
-    // TODO: в интерфейс пролезла реализация (database)
-    GenericDaoUpdatable<Chat> getChatDao();
+    void updateChat(Chat chat) throws DataAccessException;
 
     /**
      * Список сообщений из чата

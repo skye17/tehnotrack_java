@@ -1,8 +1,8 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.*;
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.ObjectProtocol;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.ResponseMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
@@ -15,27 +15,39 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MessageStoreImpl implements MessageStore {
-    private AbstractChatMessageDao chatMessageDao;
-    private GenericDaoUpdatable<Chat> chatDao;
+    private GenericDao<ChatMessage> chatMessageDao;
+    private AbstractDao<Chat> chatDao;
     private RelationshipDao userChatsDao;
+    private RelationshipDao chatMessagesDao;
+    private ObjectProtocol objectProtocol;
 
     private SessionManager sessionManager;
 
-    public MessageStoreImpl(QueryExecutor queryExecutor) {
-        chatMessageDao = new ChatMessageDao(queryExecutor);
-        chatDao = new ChatDao(queryExecutor);
-        userChatsDao = new UserChatsDao(queryExecutor);
+    public MessageStoreImpl(TableProvider tableProvider, SessionManager sessionManager, ObjectProtocol objectProtocol) {
+        if (tableProvider != null && sessionManager != null && objectProtocol != null) {
+            this.objectProtocol = objectProtocol;
+            this.sessionManager = sessionManager;
+            chatMessageDao = tableProvider.getDao(TableType.CHATMESSAGE);
+            chatDao = tableProvider.getDao(TableType.CHAT);
+            userChatsDao = tableProvider.getRelationDao(TableType.USER, TableType.CHAT);
+            chatMessagesDao = tableProvider.getRelationDao(TableType.CHATMESSAGE, TableType.CHAT);
+        }
     }
 
-    public MessageStoreImpl(QueryExecutor queryExecutor, SessionManager sessionManager) {
-        this(queryExecutor);
-        this.sessionManager = sessionManager;
-    }
 
-    public GenericDaoUpdatable<Chat> getChatDao() {
-        return chatDao;
+    private void updateUsers(List<Long> usersList, String notification) throws DataAccessException {
+        try {
+            ResponseMessage responseMessage = objectProtocol.decode(notification);
+            for (Long userId : usersList) {
+                Session session = sessionManager.getSessionByUser(userId);
+                if (session != null) {
+                    sessionManager.getSessionByUser(userId).getConnectionHandler().send(responseMessage);
+                }
+            }
+        } catch (IOException e) {
+            throw new DataAccessException(e);
+        }
     }
-
 
     @Override
     public List<Long> getChatsByUserId(Long userId) throws DataAccessException {
@@ -49,10 +61,9 @@ public class MessageStoreImpl implements MessageStore {
     @Override
     public Chat getChatById(Long chatId) throws DataAccessException {
         if (chatId != null) {
-
             Chat chat = chatDao.getById(chatId);
             if (chat != null) {
-                List<Long> messages = chatMessageDao.getMessagesFromChat(chatId);
+                List<Long> messages = chatMessagesDao.getBySecondKey(chatId);
                 List<Long> users = userChatsDao.getBySecondKey(chatId);
                 chat.setUsersList(users);
                 chat.setMessageList(messages);
@@ -60,6 +71,16 @@ public class MessageStoreImpl implements MessageStore {
             return chat;
         }
         return null;
+    }
+
+    @Override
+    public void updateChat(Chat chat) throws DataAccessException {
+        if (chat != null) {
+            chatDao.setUpdateIndexes(2);
+            chatDao.update(chat);
+            String notification = "Title changed in chat " + chat.getId();
+            updateUsers(chat.getUsersList(), notification);
+        }
     }
 
     @Override
@@ -108,26 +129,11 @@ public class MessageStoreImpl implements MessageStore {
     public void addMessage(Long messageId, Long chatId) throws DataAccessException {
         if (messageId != null && chatId != null) {
             Chat chat = getChatById(chatId);
-
             if (chat != null) {
                 List<Long> usersList = new ArrayList<>(chat.getUsersList());
-                ResponseMessage responseMessage = new ResponseMessage();
-                ObjectMapper mapper = new ObjectMapper();
                 String notification = "New message in chat " + chatId;
-                try {
-                    String jsonString = mapper.writeValueAsString(notification);
-                    responseMessage.setResponse(jsonString);
-                    responseMessage.setResultClass(String.class.getName());
-                    usersList.remove(getMessageById(messageId).getSender());
-                    for (Long userId : usersList) {
-                        Session session = sessionManager.getSessionByUser(userId);
-                        if (session != null) {
-                            sessionManager.getSessionByUser(userId).getConnectionHandler().send(responseMessage);
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new DataAccessException(e);
-                }
+                usersList.remove(getMessageById(messageId).getSender());
+                updateUsers(usersList, notification);
             }
         }
 

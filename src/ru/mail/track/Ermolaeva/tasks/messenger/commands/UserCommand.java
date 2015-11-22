@@ -21,8 +21,8 @@ public class UserCommand extends MessengerCommand<UserMessage> {
         String nickname = commandMessage.getNickname();
         if (nickname != null) {
             session.getCurrentUser().setNickname(nickname);
-
-            userStore.update(session.getCurrentUser(), new int[]{4});
+            userStore.setUpdateIndexes(4);
+            userStore.update(session.getCurrentUser());
             return new CommandResult(NICKNAME_CHANGED);
 
         } else {

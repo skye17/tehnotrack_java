@@ -33,4 +33,6 @@ public interface GenericDao<T extends Identified> {
      * Возвращает список объектов соответствующих всем записям в базе
      */
     List<T> getAll() throws DataAccessException;
+
+    void update(T object) throws DataAccessException;
 }

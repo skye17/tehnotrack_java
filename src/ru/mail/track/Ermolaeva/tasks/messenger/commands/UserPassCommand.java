@@ -26,9 +26,8 @@ public class UserPassCommand extends MessengerCommand<UserPassMessage> {
         String newPassword = commandMessage.getNewPassword();
         if (userStore.getUser(user.getName(), oldPassword) != null && newPassword != null) {
             user.setPassword(newPassword);
-
-            userStore.update(user, new int[]{3});
-
+            userStore.setUpdateIndexes(3);
+            userStore.update(user);
             return new CommandResult(PASSWORD_CHANGED);
         } else {
             return new CommandResult(WRONG_INFO, true);

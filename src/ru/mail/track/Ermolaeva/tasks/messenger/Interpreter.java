@@ -9,6 +9,7 @@ import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandM
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions.IllegalCommandException;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.MessageListener;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.ObjectProtocol;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.SocketMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
@@ -20,17 +21,18 @@ public class Interpreter implements MessageListener {
 
     private Map<CommandType, Command> commands;
 
-    public Interpreter(Map<CommandType, Command> commands) {
+    public Interpreter(Map<CommandType, Command> commands, ObjectProtocol objectProtocol) {
         this.commands = commands;
+        CommandResult.setProtocol(objectProtocol);
     }
 
 
-    public Result handleMessage(Session session, CommandMessage message) {
+    public Result handleMessage(Session state, CommandMessage message) {
         try {
             if (commands.containsKey(message.getCommandType())) {
                 // TODO: очень интересный способ, generics хорошо использованы при обработке сообщений
                 CommandMessage commandMessage = commands.get(message.getCommandType()).getArgumentParser().apply(message.getInputString());
-                return commands.get(message.getCommandType()).execute(session, commandMessage);
+                return commands.get(message.getCommandType()).execute(state, commandMessage);
             } else {
                 return new CommandResult("Invalid command", true);
             }

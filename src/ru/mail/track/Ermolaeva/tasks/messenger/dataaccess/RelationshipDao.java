@@ -12,15 +12,18 @@ import java.util.Map;
 public class RelationshipDao {
     private QueryExecutor queryExecutor;
     private String tableName;
-    private Map<Integer, String> columnNames = new HashMap<>();
+    private Relation relation;
+    private List<String> columnNames;
 
-    public RelationshipDao(QueryExecutor queryExecutor, String tableName) {
+    public RelationshipDao(QueryExecutor queryExecutor, Relation relation) {
         this.queryExecutor = queryExecutor;
-        this.tableName = tableName;
+        this.relation = relation;
+        this.tableName = relation.getRelationTableName();
+        this.columnNames = relation.getRelationColumns();
     }
 
     public List<Long> getByFirstKey(Long firstKeyId) throws DataAccessException {
-        String sql = "SELECT " + columnNames.get(2) + " FROM " + tableName + " WHERE " + columnNames.get(1) + "= ?;";
+        String sql = "SELECT " + columnNames.get(1) + " FROM " + tableName + " WHERE " + columnNames.get(0) + "= ?;";
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, firstKeyId);
 
@@ -34,7 +37,7 @@ public class RelationshipDao {
     }
 
     public List<Long> getBySecondKey(Long secondKeyId) throws DataAccessException {
-        String sql = "SELECT " + columnNames.get(1) + " FROM " + tableName + " WHERE " + columnNames.get(2) + "= ?;";
+        String sql = "SELECT " + columnNames.get(0) + " FROM " + tableName + " WHERE " + columnNames.get(1) + "= ?;";
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, secondKeyId);
 
@@ -48,7 +51,7 @@ public class RelationshipDao {
     }
 
     public void addManyLinks(Map<Long, Long> keyIds) throws DataAccessException {
-        String sql = "INSERT into " + tableName + " (" + columnNames.get(1) + "," + columnNames.get(2) + ") VALUES(?, ?);";
+        String sql = "INSERT into " + tableName + " (" + columnNames.get(0) + "," + columnNames.get(1) + ") VALUES(?, ?);";
         List<Map<Integer, Object>> recordValues = new ArrayList<>();
         for (Map.Entry<Long, Long> entry : keyIds.entrySet()) {
             Map<Integer, Object> values = new HashMap<>();
@@ -61,7 +64,7 @@ public class RelationshipDao {
     }
 
     public void addLink(Long firstKeyId, Long secondKeyId) throws DataAccessException {
-        String sql = "INSERT into " + tableName + " (" + columnNames.get(1) + "," + columnNames.get(2) + ") VALUES(?, ?);";
+        String sql = "INSERT into " + tableName + " (" + columnNames.get(0) + "," + columnNames.get(1) + ") VALUES(?, ?);";
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, firstKeyId);
         values.put(2, secondKeyId);
@@ -73,7 +76,7 @@ public class RelationshipDao {
     }
 
     public void removeLink(Long firstKeyId, Long secondKeyId) throws DataAccessException {
-        String sql = "DELETE from " + tableName + " WHERE " + columnNames.get(1) + "= ? AND " + columnNames.get(2) + " = ?;";
+        String sql = "DELETE from " + tableName + " WHERE " + columnNames.get(0) + "= ? AND " + columnNames.get(1) + " = ?;";
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, firstKeyId);
         values.put(2, secondKeyId);
@@ -84,26 +87,11 @@ public class RelationshipDao {
         }
     }
 
-    public void setColumnNames(Map<Integer, String> columnNames) {
-        if (columnNames.size() != 2) {
-            throw new IllegalArgumentException("Wrong type of relationship");
-        } else {
-            this.columnNames = null;
-            this.columnNames = columnNames;
-        }
+    public TableType getFirstKeyType() {
+        return relation.getFirstKey();
     }
 
-    public void setColumnNames(List<String> columnNamesList) {
-        if (columnNamesList == null || columnNamesList.size() != 2) {
-            throw new IllegalArgumentException("Wrong type of relationship");
-        } else {
-            columnNames.put(1, columnNamesList.get(0));
-            columnNames.put(2, columnNamesList.get(1));
-        }
-    }
-
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public TableType getSecondKeyType() {
+        return relation.getSecondKey();
     }
 }

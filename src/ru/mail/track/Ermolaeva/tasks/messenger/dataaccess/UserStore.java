@@ -14,51 +14,47 @@ import java.util.Map;
 
 public class UserStore extends AbstractUserDao {
 
-    public UserStore(QueryExecutor queryExecutor) {
-        super(queryExecutor, "users");
-        Map<Integer, String> columnNames = new HashMap<>();
-
-        columnNames.put(1, "id");
-        columnNames.put(2, "login");
-        columnNames.put(3, "password");
-        columnNames.put(4, "nickname");
-        setColumnNames(columnNames);
+    public UserStore(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
+        super(queryExecutor, tableProvider, tableType);
     }
 
 
-    @Override
-    public String getInsertQuery() {
-        return "INSERT INTO " + tableName + " (login, password) VALUES (?, ?);";
-    }
+    //@Override
+    //public String getInsertQuery() {
+    //    return "INSERT INTO " + tableName + " (login, password) VALUES (?, ?);";
+    // }
 
 
     @Override
     protected Map<Integer, Object> prepareValuesForInsert(User object) throws DataAccessException {
         String login = object.getName();
         String password = object.getPassword();
+        String nickname = object.getNickname();
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, login);
         values.put(2, password);
+        values.put(3, nickname);
         return values;
     }
 
     @Override
-    protected Map<Integer, Object> prepareValuesForUpdate(User object, int[] columnIndexes) throws DataAccessException {
+    protected Map<Integer, Object> prepareValuesForUpdate(User object) throws DataAccessException {
         if (object.getId() == null) {
             throw new DataAccessException("No such user");
         }
         String updateField = null;
-        if (columnIndexes.length == 1) {
-            if (columnIndexes[0] == 3) {
+        if (updateIndexes.size() == 1) {
+            if (updateIndexes.get(0) == 3) {
                 updateField = object.getPassword();
             } else {
-                if (columnIndexes[0] == 4) {
+                if (updateIndexes.get(0) == 4) {
                     updateField = object.getNickname();
                 } else {
                     throw new DataAccessException("This update operation is not supported");
                 }
             }
         }
+
         Map<Integer, Object> values = new HashMap<>();
         values.put(1, updateField);
         values.put(2, object.getId());

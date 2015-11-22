@@ -20,7 +20,7 @@ public class HelpCommand extends MessengerCommand<HelpMessage> {
     }
 
     @Override
-    protected Result executeCommand(Session session, HelpMessage commandMessage) {
+    protected Result executeCommand(Session state, HelpMessage commandMessage) {
         CommandType queryCommand = commandMessage.getCommand();
         List<String> result = new ArrayList<>();
         if (queryCommand != null) {

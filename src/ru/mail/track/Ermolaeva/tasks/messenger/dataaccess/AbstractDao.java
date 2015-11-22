@@ -4,9 +4,7 @@ import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessE
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.IllegalDataStateException;
 
 import java.sql.ResultSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // TODO: да, полезный класс получился
 public abstract class AbstractDao<T extends Identified> implements GenericDao<T> {
@@ -15,33 +13,24 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
     protected String tableName;
     protected Map<Integer, String> columnNames;
     protected QueryExecutor queryExecutor;
+    protected List<Integer> insertIndexes;
+    protected List<Integer> updateIndexes;
+    protected TableType tableType;
+    protected TableProvider tableProvider;
 
-    public AbstractDao(QueryExecutor queryExecutor) {
+    public AbstractDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
         this.queryExecutor = queryExecutor;
+        this.tableType = tableType;
+        this.tableProvider = tableProvider;
+        this.tableName = tableProvider.getTableName(tableType);
+        this.columnNames = tableProvider.getTableColumns(tableType);
+        this.insertIndexes = new ArrayList<>(columnNames.keySet());
     }
 
-    public AbstractDao(QueryExecutor queryExecutor, String tableName) {
-        this.queryExecutor = queryExecutor;
-        this.tableName = tableName;
-    }
 
-
-    public void setColumnNames(Map<Integer, String> columnNames) {
-        this.columnNames = columnNames;
-    }
-
-    public void setColumnNames(List<String> columnNamesList) {
-        columnNames = new HashMap<>();
-        if (columnNamesList != null && columnNamesList.size() != 0) {
-            for (int i = 1; i <= columnNamesList.size(); ++i) {
-                columnNames.put(i, columnNamesList.get(i - 1));
-            }
-        }
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
+    /*public TableObject<T> getTableObject(T object) {
+        return new TableObject<>(object, this);
+    }*/
 
 
     /*
@@ -52,7 +41,21 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
     }
 
 
-    public abstract String getInsertQuery();
+    public String getInsertQuery() {
+        String insertQuery = "INSERT INTO " + tableName + " (";
+        String values = "VALUES (";
+        for (int index : insertIndexes) {
+            String currentColumnName = columnNames.get(index);
+            insertQuery += currentColumnName + ",";
+            values += "?,";
+        }
+        insertQuery = insertQuery.substring(0, insertQuery.length() - 1);
+        insertQuery += ") ";
+        values = values.substring(0, values.length() - 1);
+        values += ");";
+        insertQuery += values;
+        return insertQuery;
+    }
 
     /*
      * Возвращает sql запрос для удаления записи из базы данных.
@@ -145,4 +148,51 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
     }
 
 
+    public void setInsertIndexes(Integer... insertIndexes) {
+        this.insertIndexes = null;
+        this.insertIndexes = Arrays.asList(insertIndexes);
+    }
+
+
+    /**
+     * Возвращает sql запрос для обновления записи.
+     */
+    public String getUpdateQuery() {
+        String updateQuery = "UPDATE " + tableName + " SET ";
+        for (int index : updateIndexes) {
+            String currentColumnName = columnNames.get(index);
+            updateQuery += currentColumnName + " = ?,";
+        }
+        updateQuery = updateQuery.substring(0, updateQuery.length() - 1);
+
+        updateQuery += ID_CLAUSE;
+        return updateQuery;
+    }
+
+    /**
+     * Устанавливает аргументы update запроса в соответствии со значением полей объекта object.
+     */
+    protected abstract Map<Integer, Object> prepareValuesForUpdate(T object)
+            throws DataAccessException;
+
+
+    @Override
+    public void update(T object) throws DataAccessException {
+        if (object.getId() == null) {
+            throw new DataAccessException("No such object");
+        }
+
+        String sql = getUpdateQuery();
+        Map<Integer, Object> values = prepareValuesForUpdate(object);
+
+        int updated = queryExecutor.executeUpdate(sql, values);
+        if (updated != 1) {
+            throw new IllegalDataStateException("On update modified more than 1 record: " + updated);
+        }
+    }
+
+    public void setUpdateIndexes(Integer... updateIndexes) {
+        this.updateIndexes = null;
+        this.updateIndexes = Arrays.asList(updateIndexes);
+    }
 }

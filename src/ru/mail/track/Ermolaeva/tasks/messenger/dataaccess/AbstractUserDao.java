@@ -5,9 +5,9 @@ import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessE
 import ru.mail.track.Ermolaeva.tasks.messenger.user.User;
 import ru.mail.track.Ermolaeva.tasks.messenger.user.UserStatus;
 
-public abstract class AbstractUserDao extends AbstractDaoUpdatable<User> {
-    public AbstractUserDao(QueryExecutor queryExecutor, String tableName) {
-        super(queryExecutor, tableName);
+public abstract class AbstractUserDao extends AbstractDao<User> {
+    public AbstractUserDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
+        super(queryExecutor, tableProvider, tableType);
     }
 
     public abstract UserStatus getUser(String name, String password) throws DataAccessException;

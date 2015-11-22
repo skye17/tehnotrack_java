@@ -47,7 +47,7 @@ public abstract class MessengerCommand<T extends CommandMessage> implements Comm
     }
 
 
-    protected abstract Result executeCommand(Session session, T commandMessage) throws DataAccessException;
+    protected abstract Result executeCommand(Session state, T commandMessage) throws DataAccessException;
 
 
     @Override
