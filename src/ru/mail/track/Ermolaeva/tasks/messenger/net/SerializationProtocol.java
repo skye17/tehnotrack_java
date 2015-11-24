@@ -28,7 +28,6 @@ public class SerializationProtocol implements Protocol {
                 out.flush();
                 return byteOutStream.toByteArray();
             } catch (IOException io) {
-                //
                 throw new IllegalArgumentException("Can't encode message");
             }
         }
