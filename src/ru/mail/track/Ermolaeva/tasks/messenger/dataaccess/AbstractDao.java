@@ -16,14 +16,16 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
     protected List<Integer> insertIndexes;
     protected List<Integer> updateIndexes;
     protected TableType tableType;
-    protected TableProvider tableProvider;
 
-    public AbstractDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
+    public AbstractDao(QueryExecutor queryExecutor, TableType tableType) {
         this.queryExecutor = queryExecutor;
         this.tableType = tableType;
-        this.tableProvider = tableProvider;
+        TableProvider tableProvider = TableProvider.getInstance();
+
         this.tableName = tableProvider.getTableName(tableType);
         this.columnNames = tableProvider.getTableColumns(tableType);
+        //this.tableName = tableName;
+        //this.columnNames = columnNames;
         this.insertIndexes = new ArrayList<>(columnNames.keySet());
     }
 
@@ -93,8 +95,8 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
             throw new IllegalDataStateException("Exception on new inserted record.");
         }
         item.setId(objectId);
-
         return item;
+
     }
 
     @Override

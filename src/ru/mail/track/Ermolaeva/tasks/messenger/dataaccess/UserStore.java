@@ -14,8 +14,8 @@ import java.util.Map;
 
 public class UserStore extends AbstractUserDao {
 
-    public UserStore(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
-        super(queryExecutor, tableProvider, tableType);
+    public UserStore(QueryExecutor queryExecutor, TableType tableType) {
+        super(queryExecutor, tableType);
     }
 
 

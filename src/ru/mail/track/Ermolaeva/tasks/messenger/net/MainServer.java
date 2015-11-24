@@ -3,17 +3,12 @@ package ru.mail.track.Ermolaeva.tasks.messenger.net;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.track.Ermolaeva.tasks.messenger.Interpreter;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.DaoFactory;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.QueryExecutor;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.SqlDaoFactory;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.TableProvider;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
 import ru.mail.track.Ermolaeva.tasks.messenger.setters.Commands;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -47,21 +42,15 @@ public class MainServer {
     }
 
     public static void main(String[] args) throws Exception {
-        try (DaoFactory daoFactory = new SqlDaoFactory()) {
-            QueryExecutor queryExecutor = new QueryExecutor((Connection) daoFactory.getContext());
-            SessionManager sessionManager = new SessionManager();
+        SessionManager sessionManager = SessionManager.getInstance();
 
-            TableProvider tableProvider = new TableProvider(queryExecutor);
-            tableProvider.setUp();
+        ObjectProtocol objectProtocol = new JsonProtocol();
+        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager,
+                objectProtocol), objectProtocol);
 
-            ObjectProtocol objectProtocol = new JsonProtocol();
-            Interpreter interpreter = new Interpreter(Commands.getCommands(tableProvider, sessionManager,
-                    objectProtocol), objectProtocol);
+        MainServer server = new MainServer(PORT, POOLSIZE, sessionManager, interpreter);
 
-            MainServer server = new MainServer(PORT, POOLSIZE, sessionManager, interpreter);
-
-            server.startServer();
-        }
+        server.startServer();
     }
 
     public void startServer() {

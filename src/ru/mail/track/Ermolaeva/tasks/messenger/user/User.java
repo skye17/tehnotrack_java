@@ -13,7 +13,6 @@ public class User implements Identified {
     }
 
 
-
     public User(String username, String userPassword, String userNickname) {
         this(username, userPassword);
         nickname = userNickname;

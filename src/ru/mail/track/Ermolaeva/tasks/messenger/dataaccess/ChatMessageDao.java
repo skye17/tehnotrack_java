@@ -10,10 +10,9 @@ import java.sql.Timestamp;
 import java.util.*;
 
 public class ChatMessageDao extends AbstractDao<ChatMessage> {
-    public ChatMessageDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
-        super(queryExecutor, tableProvider, tableType);
+    public ChatMessageDao(QueryExecutor queryExecutor, TableType tableType) {
+        super(queryExecutor, tableType);
     }
-
 
     @Override
     protected Map<Integer, Object> prepareValuesForInsert(ChatMessage object) throws DataAccessException {

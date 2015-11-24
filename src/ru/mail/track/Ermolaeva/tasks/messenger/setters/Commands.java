@@ -19,8 +19,9 @@ import java.util.Map;
 public class Commands {
     public static final String PARAM_DELIMITER = "\\s+";
 
-    public static Map<CommandType, Command> getCommands(TableProvider tableProvider, SessionManager sessionManager,
+    public static Map<CommandType, Command> getCommands(SessionManager sessionManager,
                                                         ObjectProtocol objectProtocol) {
+        TableProvider tableProvider = TableProvider.getInstance();
         AbstractUserDao userStore = tableProvider.getUserDao();
         MessageStore messageStore = new MessageStoreImpl(tableProvider, sessionManager, objectProtocol);
         Map<CommandType, Command> commands = new HashMap<>();

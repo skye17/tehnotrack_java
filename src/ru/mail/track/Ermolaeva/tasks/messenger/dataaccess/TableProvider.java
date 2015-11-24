@@ -9,16 +9,16 @@ import java.util.Map;
 
 
 public class TableProvider {
+    private volatile static TableProvider uniqueProvider;
     private Map<TableType, AbstractDao> daoMap;
     private List<RelationshipDao> relationshipDaoList;
     private Map<TableType, Map<Integer, String>> tableColumns;
     private Map<TableType, String> tableNames;
     private List<Relation> relations;
-
     private QueryExecutor queryExecutor;
 
-    public TableProvider(QueryExecutor queryExecutor) {
-        this.queryExecutor = queryExecutor;
+    private TableProvider() {
+        queryExecutor = new QueryExecutor();
         this.tableNames = Tables.prepareTableNames();
         this.tableColumns = Tables.prepareTableColumnsNames();
         relations = Tables.prepareRelations();
@@ -28,14 +28,27 @@ public class TableProvider {
         }
     }
 
-    public void setUp() {
+    public static TableProvider getInstance() {
+        if (uniqueProvider == null) {
+            synchronized (TableProvider.class) {
+                if (uniqueProvider == null) {
+                    uniqueProvider = new TableProvider();
+                    uniqueProvider.setup();
+                }
+            }
+        }
+        return uniqueProvider;
+    }
+
+    private void setup() {
         daoMap = new HashMap<>();
-        daoMap.put(TableType.CHAT, new ChatDao(queryExecutor, this, TableType.CHAT));
-        daoMap.put(TableType.CHATMESSAGE, new ChatMessageDao(queryExecutor, this, TableType.CHATMESSAGE));
+        daoMap.put(TableType.CHAT, new ChatDao(queryExecutor, TableType.CHAT));
+        daoMap.put(TableType.CHATMESSAGE, new ChatMessageDao(queryExecutor, TableType.CHATMESSAGE));
+        daoMap.put(TableType.USER, new UserStore(queryExecutor, TableType.USER));
     }
 
     public AbstractUserDao getUserDao() {
-        return new UserStore(queryExecutor, this, TableType.USER);
+        return (AbstractUserDao) daoMap.get(TableType.USER);
     }
 
     public <T extends Identified> AbstractDao<T> getDao(TableType tableType) {

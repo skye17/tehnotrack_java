@@ -13,8 +13,8 @@ import java.util.Map;
 
 public class ChatDao extends AbstractDao<Chat> {
 
-    public ChatDao(QueryExecutor queryExecutor, TableProvider tableProvider, TableType tableType) {
-        super(queryExecutor, tableProvider, tableType);
+    public ChatDao(QueryExecutor queryExecutor, TableType tableType) {
+        super(queryExecutor, tableType);
     }
 
 

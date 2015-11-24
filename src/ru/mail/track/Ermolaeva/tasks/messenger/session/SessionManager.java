@@ -7,14 +7,25 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class SessionManager {
-
+    private volatile static SessionManager uniqueManager;
     private Map<Long, Session> sessionMap;
     private Map<Long, Long> userSession;
     private AtomicLong sessionCounter = new AtomicLong(0);
 
-    public SessionManager() {
+    private SessionManager() {
         sessionMap = new HashMap<>();
         userSession = new HashMap<>();
+    }
+
+    public static SessionManager getInstance() {
+        if (uniqueManager == null) {
+            synchronized (SessionManager.class) {
+                if (uniqueManager == null) {
+                    uniqueManager = new SessionManager();
+                }
+            }
+        }
+        return uniqueManager;
     }
 
     public Session createSession() {

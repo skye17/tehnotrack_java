@@ -5,9 +5,6 @@ import org.slf4j.LoggerFactory;
 import ru.mail.track.Ermolaeva.tasks.messenger.Interpreter;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.Result;
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.QueryExecutor;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.SqlDaoFactory;
-import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.TableProvider;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
@@ -53,17 +50,12 @@ public class NioMainServer implements Runnable {
 
 
     public static void main(String[] args) throws Exception {
-        QueryExecutor queryExecutor = new QueryExecutor(new SqlDaoFactory().getContext());
-        SessionManager sessionManager = new SessionManager();
-
-        TableProvider tableProvider = new TableProvider(queryExecutor);
-        tableProvider.setUp();
-
+        SessionManager sessionManager = SessionManager.getInstance();
 
         Protocol protocol = new SerializationProtocol();
         ObjectProtocol objectProtocol = new JsonProtocol();
 
-        Interpreter interpreter = new Interpreter(Commands.getCommands(tableProvider, sessionManager,
+        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager,
                 objectProtocol), objectProtocol);
 
         NioMainServer server = new NioMainServer();
