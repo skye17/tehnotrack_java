@@ -21,18 +21,10 @@ public abstract class AbstractDao<T extends Identified> implements GenericDao<T>
         this.queryExecutor = queryExecutor;
         this.tableType = tableType;
         TableProvider tableProvider = TableProvider.getInstance();
-
         this.tableName = tableProvider.getTableName(tableType);
         this.columnNames = tableProvider.getTableColumns(tableType);
-        //this.tableName = tableName;
-        //this.columnNames = columnNames;
         this.insertIndexes = new ArrayList<>(columnNames.keySet());
     }
-
-
-    /*public TableObject<T> getTableObject(T object) {
-        return new TableObject<>(object, this);
-    }*/
 
 
     /*

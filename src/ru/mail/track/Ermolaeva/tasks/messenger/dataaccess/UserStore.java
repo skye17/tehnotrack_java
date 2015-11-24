@@ -18,13 +18,6 @@ public class UserStore extends AbstractUserDao {
         super(queryExecutor, tableType);
     }
 
-
-    //@Override
-    //public String getInsertQuery() {
-    //    return "INSERT INTO " + tableName + " (login, password) VALUES (?, ?);";
-    // }
-
-
     @Override
     protected Map<Integer, Object> prepareValuesForInsert(User object) throws DataAccessException {
         String login = object.getName();

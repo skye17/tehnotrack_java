@@ -8,10 +8,8 @@ public class User implements Identified {
     private String password;
     private String nickname;
 
-
     public User() {
     }
-
 
     public User(String username, String userPassword, String userNickname) {
         this(username, userPassword);
