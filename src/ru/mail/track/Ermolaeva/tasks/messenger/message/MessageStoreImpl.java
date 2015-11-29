@@ -2,7 +2,6 @@ package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.*;
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
-import ru.mail.track.Ermolaeva.tasks.messenger.net.ObjectProtocol;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.ResponseMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
@@ -19,13 +18,11 @@ public class MessageStoreImpl implements MessageStore {
     private AbstractDao<Chat> chatDao;
     private RelationshipDao userChatsDao;
     private RelationshipDao chatMessagesDao;
-    private ObjectProtocol objectProtocol;
 
     private SessionManager sessionManager;
 
-    public MessageStoreImpl(TableProvider tableProvider, SessionManager sessionManager, ObjectProtocol objectProtocol) {
-        if (tableProvider != null && sessionManager != null && objectProtocol != null) {
-            this.objectProtocol = objectProtocol;
+    public MessageStoreImpl(TableProvider tableProvider, SessionManager sessionManager) {
+        if (tableProvider != null && sessionManager != null) {
             this.sessionManager = sessionManager;
             chatMessageDao = tableProvider.getDao(TableType.CHATMESSAGE);
             chatDao = tableProvider.getDao(TableType.CHAT);
@@ -37,7 +34,8 @@ public class MessageStoreImpl implements MessageStore {
 
     private void updateUsers(List<Long> usersList, String notification) throws DataAccessException {
         try {
-            ResponseMessage responseMessage = objectProtocol.decode(notification);
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setResponseObject(notification);
             for (Long userId : usersList) {
                 Session session = sessionManager.getSessionByUser(userId);
                 if (session != null) {
@@ -131,7 +129,8 @@ public class MessageStoreImpl implements MessageStore {
             Chat chat = getChatById(chatId);
             if (chat != null) {
                 List<Long> usersList = new ArrayList<>(chat.getUsersList());
-                String notification = "New message in chat " + chatId;
+                String message = getMessageById(messageId).getMessage();
+                String notification = "New message in chat " + chatId + ":" + message;
                 usersList.remove(getMessageById(messageId).getSender());
                 updateUsers(usersList, notification);
             }

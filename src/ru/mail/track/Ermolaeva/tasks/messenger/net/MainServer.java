@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MainServer {
+public class MainServer implements Server {
 
     public static final int PORT = 19000;
     public static final int POOLSIZE = 4;
@@ -44,9 +44,7 @@ public class MainServer {
     public static void main(String[] args) throws Exception {
         SessionManager sessionManager = SessionManager.getInstance();
 
-        ObjectProtocol objectProtocol = new JsonProtocol();
-        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager,
-                objectProtocol), objectProtocol);
+        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager));
 
         MainServer server = new MainServer(PORT, POOLSIZE, sessionManager, interpreter);
 
@@ -67,12 +65,12 @@ public class MainServer {
                 pool.submit(handler);
             }
         } catch (Exception ex) {
-            stopServer();
+            shutDownServer();
             pool.shutdown();
         }
     }
 
-    public void stopServer() {
+    public void shutDownServer() {
         isRunning = false;
         handlers.values().forEach(ConnectionHandler::stop);
     }

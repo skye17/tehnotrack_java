@@ -24,22 +24,19 @@ public class NioClient {
     public static final String HOST = "localhost";
     static Logger log = LoggerFactory.getLogger(NioClient.class);
     private Protocol protocol;
-    private ObjectProtocol objectProtocol;
 
     private Selector selector;
     private SocketChannel channel;
     private ByteBuffer buffer = ByteBuffer.allocate(8192);
     private BlockingQueue<CommandMessage> inputQueue = new ArrayBlockingQueue<>(10);
 
-    public NioClient(Protocol protocol, ObjectProtocol objectProtocol) {
+    public NioClient(Protocol protocol) {
         this.protocol = protocol;
-        this.objectProtocol = objectProtocol;
     }
 
     public static void main(String[] args) throws Exception {
         Protocol protocol = new SerializationProtocol();
-        ObjectProtocol objectProtocol = new JsonProtocol();
-        NioClient client = new NioClient(protocol, objectProtocol);
+        NioClient client = new NioClient(protocol);
         client.start();
     }
 
@@ -127,7 +124,8 @@ public class NioClient {
     private void processServerResponse(SocketMessage serverResponse) {
         if (serverResponse != null && serverResponse.getMessageType().equals(MessageType.RESPONSE)) {
             ResponseMessage responseMessage = (ResponseMessage) serverResponse;
-            Object responseObject = objectProtocol.encode(responseMessage);
+            Object responseObject = responseMessage.getResponseObject();
+            //Object responseObject = objectProtocol.encode(responseMessage);
             if (responseObject != null) {
                 System.out.printf("%s\n", responseObject);
                 System.out.println("$");

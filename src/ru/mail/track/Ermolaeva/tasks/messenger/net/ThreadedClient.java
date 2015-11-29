@@ -15,15 +15,14 @@ public class ThreadedClient implements MessageListener {
     public static final int PORT = 19000;
     public static final String HOST = "localhost";
     private ConnectionHandler handler;
-    private ObjectProtocol protocol;
+    private Thread socketHandler;
 
-    public ThreadedClient(ObjectProtocol protocol) {
+    public ThreadedClient() {
         try {
             Socket socket = new Socket(HOST, PORT);
             handler = new SocketConnectionHandler(socket);
             handler.addListener(this);
-            this.protocol = protocol;
-            Thread socketHandler = new Thread(handler);
+            socketHandler = new Thread(handler);
             socketHandler.start();
         } catch (UnknownHostException e) {
             System.out.println(e.getMessage());
@@ -34,8 +33,7 @@ public class ThreadedClient implements MessageListener {
     }
 
     public static void main(String[] args) throws Exception {
-        ObjectProtocol protocol = new JsonProtocol();
-        ThreadedClient client = new ThreadedClient(protocol);
+        ThreadedClient client = new ThreadedClient();
         Scanner scanner = new Scanner(System.in);
         InputHandler inputHandler = new InputHandler();
         System.out.println("$");
@@ -62,12 +60,22 @@ public class ThreadedClient implements MessageListener {
     @Override
     public void update(Session session, SocketMessage message) {
         ResponseMessage responseMessage = (ResponseMessage) message;
-        Object serverResponse = protocol.encode(responseMessage);
+        Object serverResponse = responseMessage.getResponseObject();
         if (serverResponse != null) {
             System.out.printf("%s\n", serverResponse);
             System.out.println("$");
         } else {
             System.out.println("Error: can't decode server response.");
+        }
+    }
+
+    public void stop() {
+
+        socketHandler.interrupt();
+        try {
+            socketHandler.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

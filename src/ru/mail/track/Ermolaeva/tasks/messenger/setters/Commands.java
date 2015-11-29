@@ -7,7 +7,6 @@ import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.AbstractUserDao;
 import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.TableProvider;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageStore;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageStoreImpl;
-import ru.mail.track.Ermolaeva.tasks.messenger.net.ObjectProtocol;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.SessionManager;
 
 import java.util.ArrayList;
@@ -19,11 +18,10 @@ import java.util.Map;
 public class Commands {
     public static final String PARAM_DELIMITER = "\\s+";
 
-    public static Map<CommandType, Command> getCommands(SessionManager sessionManager,
-                                                        ObjectProtocol objectProtocol) {
+    public static Map<CommandType, Command> getCommands(SessionManager sessionManager) {
         TableProvider tableProvider = TableProvider.getInstance();
         AbstractUserDao userStore = tableProvider.getUserDao();
-        MessageStore messageStore = new MessageStoreImpl(tableProvider, sessionManager, objectProtocol);
+        MessageStore messageStore = new MessageStoreImpl(tableProvider, sessionManager);
         Map<CommandType, Command> commands = new HashMap<>();
         Command loginCommand = new LoginCommand(userStore, sessionManager);
         loginCommand.setArgumentParser(argInput -> {

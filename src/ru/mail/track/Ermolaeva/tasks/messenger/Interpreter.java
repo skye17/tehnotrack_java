@@ -9,7 +9,6 @@ import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandM
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions.IllegalCommandException;
 import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.MessageListener;
-import ru.mail.track.Ermolaeva.tasks.messenger.net.ObjectProtocol;
 import ru.mail.track.Ermolaeva.tasks.messenger.net.SocketMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
@@ -21,9 +20,8 @@ public class Interpreter implements MessageListener {
 
     private Map<CommandType, Command> commands;
 
-    public Interpreter(Map<CommandType, Command> commands, ObjectProtocol objectProtocol) {
+    public Interpreter(Map<CommandType, Command> commands) {
         this.commands = commands;
-        CommandResult.setProtocol(objectProtocol);
     }
 
 

@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class NioMainServer implements Runnable {
+public class NioMainServer implements Runnable, Server {
 
     public static final int PORT = 19000;
     static Logger log = LoggerFactory.getLogger(NioMainServer.class);
@@ -48,15 +48,12 @@ public class NioMainServer implements Runnable {
     private BlockingQueue<SocketEvent> eventQueue = new ArrayBlockingQueue<>(10);
     private ExecutorService service = Executors.newFixedThreadPool(5);
 
-
     public static void main(String[] args) throws Exception {
         SessionManager sessionManager = SessionManager.getInstance();
 
         Protocol protocol = new SerializationProtocol();
-        ObjectProtocol objectProtocol = new JsonProtocol();
 
-        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager,
-                objectProtocol), objectProtocol);
+        Interpreter interpreter = new Interpreter(Commands.getCommands(sessionManager));
 
         NioMainServer server = new NioMainServer();
         server.init(protocol, sessionManager, interpreter);
@@ -203,5 +200,15 @@ public class NioMainServer implements Runnable {
                 System.exit(1);
             }
         }
+    }
+
+    @Override
+    public void startServer() {
+
+    }
+
+    @Override
+    public void shutDownServer() {
+
     }
 }
