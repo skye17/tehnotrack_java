@@ -1,17 +1,57 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
 
-import java.util.Collection;
+import java.util.List;
 
+/**
+ * Хранилище информации о сообщениях
+ */
 public interface MessageStore {
-    void addMessage(Message message);
 
-    Collection<Message> getMessageHistory();
+    /**
+     * получаем список ид пользователей заданного чата
+     */
+    List<Long> getChatsByUserId(Long userId) throws DataAccessException;
 
-    Collection<Message> getMessageHistory(int messagesNumber);
+    /**
+     * получить информацию о чате
+     */
 
-    Collection<Message> getMessagesByKeyword(String keyword);
+    Chat getChatById(Long chatId) throws DataAccessException;
 
-    Collection<Message> getMessagesByPattern(String pattern, boolean caseFlag);
+    void updateChat(Chat chat) throws DataAccessException;
 
+    /**
+     * Список сообщений из чата
+     */
+    List<Long> getMessagesFromChat(Long chatId) throws DataAccessException;
+
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern) throws DataAccessException;
+
+    List<ChatMessage> getMessagesFromChatByRegex(Long chatId, String pattern, boolean caseFlag) throws DataAccessException;
+
+    /**
+     * Получить информацию о сообщении
+     */
+    ChatMessage getMessageById(Long messageId) throws DataAccessException;
+
+
+    /**
+     * Добавить сообщение в чат
+     */
+    void addMessage(Long messageId, Long chatId) throws DataAccessException;
+
+    /**
+     * Добавить пользователя к чату
+     */
+    Chat addUserToChat(Long userId, Long chatId) throws DataAccessException;
+
+    void removeUserFromChat(Long userId, Long chatId) throws DataAccessException;
+
+    void addUsersToChat(List<Long> userIds, Long chatId) throws DataAccessException;
+
+    Long addMessageToStore(ChatMessage message) throws DataAccessException;
+
+    Long addChatToStore(Chat chat) throws DataAccessException;
 }

@@ -1,41 +1,36 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
-import java.util.HashMap;
+
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.HelpMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class HelpCommand extends MessengerCommand {
+public class HelpCommand extends MessengerCommand<HelpMessage> {
+    private Map<CommandType, Command> commands;
 
-    private Map<String, String> commands;
-
-    public HelpCommand(List<Command> commands) {
-        name = "help";
-        description = "/help - show information about all commands\n/help <command> - show information about <command>";
-        this.commands = new HashMap<>();
-        this.commands.put(name, description);
-        for (Command command : commands) {
-            this.commands.put(command.getName(), command.getDescription());
-        }
-
+    public HelpCommand(Map<CommandType, Command> commands) {
+        commandType = CommandType.HELP;
+        description = "/help <command>- show information about <command>/all commands";
+        needLogin = false;
+        this.commands = commands;
+        commands.put(commandType, this);
     }
 
     @Override
-    public void execute(String argsString) {
-        String[] arguments = preprocessArgumentsString(argsString);
-        if (arguments.length == 0) {
-            for (String commandName : commands.keySet()) {
-                System.out.println(commandName + ":\n" + commands.get(commandName));
-            }
+    protected Result executeCommand(Session state, HelpMessage commandMessage) {
+        CommandType queryCommand = commandMessage.getCommand();
+        List<String> result = new ArrayList<>();
+        if (queryCommand != null) {
+            result.add(commands.get(queryCommand).getType() + ":" + commands.get(queryCommand).getDescription() + "\n");
         } else {
-            if (arguments.length == 1) {
-                if (commands.containsKey(arguments[0])) {
-                    System.out.println(arguments[0] + ":\n" + commands.get(arguments[0]));
-                } else {
-                    System.out.println("Command not found");
-                }
-            } else {
-                illegalArgument();
+            for (Command command : commands.values()) {
+                result.add(command.getType() + ":" + command.getDescription() + "\n");
             }
         }
+        return new CommandResult(result);
     }
+
 }

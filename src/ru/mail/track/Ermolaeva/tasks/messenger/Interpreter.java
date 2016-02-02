@@ -1,111 +1,53 @@
 package ru.mail.track.Ermolaeva.tasks.messenger;
 
+
 import ru.mail.track.Ermolaeva.tasks.messenger.commands.Command;
-import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.ExitException;
-import ru.mail.track.Ermolaeva.tasks.messenger.exceptions.IllegalCommandException;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandResult;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.CommandType;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.Result;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.exceptions.IllegalCommandException;
+import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageType;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.MessageListener;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.SocketMessage;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
-public class Interpreter {
-    public static final String PROMPT = "$ ";
 
-    public static final String COMMAND_NOT_FOUND_MSG = "Command not found: ";
-    public static final String EXIT_COMMAND = "/exit";
+public class Interpreter implements MessageListener {
 
-    private final Map<String, Command> commands;
+    private Map<CommandType, Command> commands;
 
-    private InputStream in;
-    private PrintStream out;
-    private Session session;
-
-    public Interpreter(Session session, List<Command> commandsList,
-                       final InputStream inStream,
-                       final PrintStream outStream) {
-        if (inStream == null || outStream == null) {
-            throw new ExitException("Given streams are not valid", 1);
-        }
-        in = inStream;
-        out = outStream;
-        this.session = session;
-        commands = new HashMap<>();
-        for (Command command : commandsList) {
-            commands.put(command.getName(), command);
-        }
-    }
-
-    public Interpreter(Session session, final List<Command> commandsList) {
-        this(session, commandsList, System.in, System.out);
+    public Interpreter(Map<CommandType, Command> commands) {
+        this.commands = commands;
     }
 
 
-    public final void run() {
-        out.println("Welcome to the messenger! Type /help to see all available commands");
-        out.println("To start working you need to login. Type /help login to get more information");
-        userMode();
-    }
-
-    private void userMode() {
-        try (Scanner scan = new Scanner(in)) {
-            while (true) {
-                out.print(PROMPT);
-                String line = null;
-                try {
-                    line = scan.nextLine();
-                } catch (NoSuchElementException e) {
-                    commands.get(EXIT_COMMAND).execute(null);
-                }
-                try {
-                    if (line != null && line.startsWith("/")) {
-                        commandHandler(line.substring(1));
-                    } else {
-                        session.setupMessageService();
-                        try {
-                            if (!session.getMessageService().isLoaded()) {
-                                session.getMessageService().loadHistory();
-                            }
-                            session.getMessageService().addMessage(line);
-                        } catch (IOException io) {
-                            out.println("Can't read users' history:" + io.getMessage());
-                            commands.get(EXIT_COMMAND).execute(null);
-                        }
-                    }
-                } catch (IllegalCommandException e) {
-                    out.println(e.getMessage());
-                } catch (ExitException ex) {
-                    out.println(ex.getMessage());
-                    return;
-                }
+    public Result handleMessage(Session state, CommandMessage message) {
+        try {
+            if (commands.containsKey(message.getCommandType())) {
+                // TODO: очень интересный способ, generics хорошо использованы при обработке сообщений
+                CommandMessage commandMessage = commands.get(message.getCommandType()).getArgumentParser().apply(message.getInputString());
+                return commands.get(message.getCommandType()).execute(state, commandMessage);
+            } else {
+                return new CommandResult("Invalid command", true);
             }
+        } catch (IllegalCommandException e) {
+            return new CommandResult("Invalid command usage: " + e.getMessage(), true);
         }
     }
 
-    private void commandHandler(String cmd) throws ExitException {
-        int whitespaceIndex = cmd.indexOf(" ");
-        String commandName;
-        String arguments;
-        if (whitespaceIndex < 0) {
-            commandName = cmd;
-            arguments = null;
-        } else {
-            commandName = cmd.substring(0, whitespaceIndex);
-            arguments = cmd.substring(whitespaceIndex + 1);
-        }
-        Command command = commands.get(commandName);
-        if (command == null) {
-            throw new IllegalCommandException(COMMAND_NOT_FOUND_MSG + commandName);
-        } else {
+
+    @Override
+    public void update(Session session, SocketMessage message) {
+        if (message.getMessageType().equals(MessageType.COMMAND)) {
+            Result commandResult = handleMessage(session, (CommandMessage) message);
             try {
-                command.execute(arguments);
-            } catch (IllegalArgumentException a) {
-                out.println(a.getMessage());
+                session.getConnectionHandler().send(commandResult.getMessage());
+            } catch (IOException io) {
+
             }
         }
     }

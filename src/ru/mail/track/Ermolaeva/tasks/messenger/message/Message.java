@@ -1,40 +1,26 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.message;
 
-import java.util.Date;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.Identified;
 
-public class Message {
-    private String message;
-    private String timestamp;
+public abstract class Message implements Identified {
+    protected Long id;
+    protected Long senderId;
 
-    public Message(String message, String timestamp) {
-        this.message = message;
-        setTimestamp(timestamp);
+
+    public Long getId() {
+        return id;
     }
 
-    public Message(String message, Date timestamp) {
-        this.message = message;
-        setTimestamp(timestamp);
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp.toString();
+    public Long getSender() {
+        return senderId;
     }
 
-    public String getMessage() {
-        return message;
+    public void setSender(Long sender) {
+        senderId = sender;
     }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
-
 
 }

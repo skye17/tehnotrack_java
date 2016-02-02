@@ -1,36 +1,48 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.session;
 
-import ru.mail.track.Ermolaeva.tasks.messenger.message.MessageService;
 
-import java.io.IOException;
+import ru.mail.track.Ermolaeva.tasks.messenger.net.ConnectionHandler;
+import ru.mail.track.Ermolaeva.tasks.messenger.user.User;
 
 
 public class Session {
+    private Long id;
     private User currentUser;
-    private MessageService messageService;
+    private ConnectionHandler connectionHandler;
+
+    public Session(Long id) {
+        this.id = id;
+    }
+
+    public Session() {
+    }
 
     public User getCurrentUser() {
         return currentUser;
     }
 
-    public void setCurrentUser(User currentUser) {
-        this.currentUser = currentUser;
+    public void setCurrentUser(User user) {
+        currentUser = user;
     }
 
-    public MessageService getMessageService() {
-        return messageService;
+
+    public ConnectionHandler getConnectionHandler() {
+        return connectionHandler;
     }
 
-    public void setMessageService(MessageService messageService) throws IOException {
-        this.messageService = messageService;
+    public void setConnectionHandler(ConnectionHandler connectionHandler) {
+        this.connectionHandler = connectionHandler;
     }
 
-    public void setupMessageService() {
-        messageService.setCurrentUser(currentUser);
+    public Long getId() {
+        return id;
     }
 
-    public void close() throws IOException {
-        messageService.close();
+    public void setId(Long id) {
+        this.id = id;
     }
 
+    public Long getCurrentUserId() {
+        return currentUser.getId();
+    }
 }

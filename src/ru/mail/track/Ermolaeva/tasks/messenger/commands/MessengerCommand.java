@@ -1,47 +1,76 @@
 package ru.mail.track.Ermolaeva.tasks.messenger.commands;
 
+import ru.mail.track.Ermolaeva.tasks.messenger.commands.command_message.CommandMessage;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.DataAccessException;
+import ru.mail.track.Ermolaeva.tasks.messenger.dataaccess.exceptions.IllegalDataStateException;
 import ru.mail.track.Ermolaeva.tasks.messenger.session.Session;
 
-public abstract class MessengerCommand implements Command {
-    public static final String PARAM_DELIMITER = "\\s+";
-    protected String name;
-    protected String description;
-    protected Session session;
+import java.util.function.Function;
 
-    public MessengerCommand(Session session) {
-        this.session = session;
-    }
+
+public abstract class MessengerCommand<T extends CommandMessage> implements Command {
+    protected CommandType commandType;
+    protected String description;
+    protected boolean needLogin = true;
+    protected Function<String, ? extends CommandMessage> argumentParser;
 
     public MessengerCommand() {
     }
 
-
-    @Override
-    public String getName() {
-        return name;
+    public MessengerCommand(Function<String, ? extends CommandMessage> argumentParser) {
+        this.argumentParser = argumentParser;
     }
 
     @Override
-    public abstract void execute(String argString);
+    public Function<String, ? extends CommandMessage> getArgumentParser() {
+        return argumentParser;
+    }
+
+    @Override
+    public void setArgumentParser(Function<String, ? extends CommandMessage> argumentParser) {
+        this.argumentParser = argumentParser;
+    }
+
+    @Override
+    public Result execute(Session state, CommandMessage message) {
+        if (state != null) {
+            if (needLogin && !checkIsLogin(state)) {
+                return new CommandResult("You need to login first", true);
+            }
+            try {
+                return executeCommand(state, (T) message);
+            } catch (DataAccessException | IllegalDataStateException e) {
+                return new CommandResult(e.getMessage(), true);
+            }
+        }
+        return new CommandResult("Illegal command message", true);
+    }
+
+
+    protected abstract Result executeCommand(Session state, T commandMessage) throws DataAccessException;
+
+
+    @Override
+    public CommandType getType() {
+        return commandType;
+    }
+
+    public void setCommandType(CommandType commandType) {
+        this.commandType = commandType;
+    }
 
     @Override
     public String getDescription() {
         return description;
     }
 
-    protected void illegalArgument() {
-        illegalArgument("Wrong number of arguments.");
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    protected void illegalArgument(String problemDescription) {
-        throw new IllegalArgumentException("Wrong command usage." + problemDescription + "\nSee help:\n" + description);
+
+    protected boolean checkIsLogin(Session session) {
+        return session.getCurrentUser() != null;
     }
 
-    protected String[] preprocessArgumentsString(String argsString) {
-        if (argsString != null) {
-            return argsString.trim().split(PARAM_DELIMITER);
-        } else {
-            return new String[]{};
-        }
-    }
 }
